@@ -1,13 +1,11 @@
 const POLYHEDRON_A_TOL = 1e-4
 const POLYHEDRON_WIDTH_TOL = 1e-12
 
-function polyhedral_contact!(d::PolyhedralConstraint, Xin::Vector{Interval{Float64}}, Xp::Vector{Interval{Float64}})
+function polyhedral_contact!(d::PolyhedralConstraint, Xin::Vector{Interval{Float64}}, Xp::Vector{Interval{Float64}}, nx::Int, nm::Int)
     if d.flag
         X = Xin
         A = d.A
         b = d.b
-        nx = d.nx
-        nm = d.nm
         Aik = 0.0
         Aij = 0.0
         bi = 0.0

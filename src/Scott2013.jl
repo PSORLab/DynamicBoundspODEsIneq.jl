@@ -46,6 +46,7 @@ $(TYPEDEF)
 struct Scott2013f{Z, F} <: Function
     f!::F
     nx::Int
+    nm::Int
     np::Int
     p_mc::Vector{Z}
     P::Vector{Interval{Float64}}
@@ -67,7 +68,7 @@ end
 function Scott2013f(f!, Z, nx::Int, np::Int, P, relax::Bool, subgrad::Bool,
                     polyhedral_constraint, Xapriori)
      np = length(P)
-     Scott2013f{Z,typeof(f!)}(f!, nx, np, zeros(Z,np), P,
+     Scott2013f{Z,typeof(f!)}(f!, nx, size(polyhedral_constraint.A,1), np, zeros(Z,np), P,
                               zeros(Interval{Float64},nx), zeros(Z,nx), zeros(Z,nx),
                               zeros(Interval{Float64},nx), zeros(Interval{Float64},nx),
                               zeros(Interval{Float64},nx), zeros(Interval{Float64},nx),
@@ -78,6 +79,7 @@ function (d::Scott2013f{MC{N,T},F})(dx::Vector{Float64}, x::Vector{Float64},
                                      p::Vector{Float64}, t::Float64)::Nothing where {T<:RelaxTag, N, F}
 
     np = d.np
+    nm = d.nm
     nx = d.nx
 
     if d.calculate_relax
@@ -113,12 +115,12 @@ function (d::Scott2013f{MC{N,T},F})(dx::Vector{Float64}, x::Vector{Float64},
 
     for i=d.xrng
         d.BetaL[i] = @interval(x[i])
-        polyhedral_contact(d.polyhedral_constraint, d.BetaL, d.Xapriori)
+        polyhedral_contact!(d.polyhedral_constraint, d.BetaL, d.Xapriori, nx, nm)
         d.f!(d.xout_intv1, d.BetaL, d.P, @interval(t))
         dx[i] = d.xout_intv1[i].lo
 
         d.BetaU[i] = @interval(x[nx+i])
-        polyhedral_contact(d.polyhedral_constraint, d.BetaU, d.Xapriori)
+        polyhedral_contact!(d.polyhedral_constraint, d.BetaU, d.Xapriori, nx, nm)
         d.f!(d.xout_intv2, d.BetaU, d.P, @interval(t))
         dx[nx+i] = d.xout_intv2[i].hi
 
@@ -280,10 +282,10 @@ function Scott2013(d::ODERelaxProb; calculate_relax::Bool = true,
               local_problem_storage, np, d.nx, d.polyhedral_constraint)
 end
 
-function DynamicBoundsBase.relax!(d::Scott2013{F, N, T, PRB1, PRB2, INT1, CB}) where {F, N, T<:RelaxTag,
-                                                                                      PRB1<:AbstractODEProblem,
-                                                                                      PRB2<:AbstractODEProblem, INT1,
-                                                                                      CB<:AbstractContinuousCallback}
+function relax!(d::Scott2013{F, N, T, PRB1, PRB2, INT1, CB}) where {F, N, T<:RelaxTag,
+                                                                    PRB1<:AbstractODEProblem,
+                                                                    PRB2<:AbstractODEProblem, INT1,
+                                                                    CB<:AbstractContinuousCallback}
     # load functors
     if d.integrator_state.new_decision_pnt
         for i=1:d.np

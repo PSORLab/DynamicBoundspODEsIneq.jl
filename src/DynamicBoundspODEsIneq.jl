@@ -6,13 +6,14 @@ using DiffEqSensitivity: extract_local_sensitivities, ODEForwardSensitivityProbl
 using DiffEqBase: remake, AbstractODEProblem, AbstractContinuousCallback, solve
 using Sundials
 
-import DynamicBoundsBase: relax!
-
-export Scott2013
+import DynamicBoundsBase: relax!, set, setall!, get, getall!, relax!
+export Scott2013, set, setall!, get, getall!, relax!
 include("local_integration_problem.jl")
+include("contractors.jl")
 include("Scott2013.jl")
 
 import DynamicBoundsBase: integrate!
+export integrate!
 include("integrate.jl")
 
 end # module

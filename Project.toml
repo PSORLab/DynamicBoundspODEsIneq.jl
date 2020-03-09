@@ -12,6 +12,7 @@ DynamicBoundspODEs = "6170469c-6ef3-4ad7-9481-00b25b7242e2"
 ElasticArrays = "fdbdab4c-e67f-52f5-8c3f-e7b388dad3d4"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 McCormick = "53c679d3-6890-5091-8386-c291e8c8aaa1"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Sundials = "c3572dad-4567-51f8-b174-8c6c989267f4"
 
 [compat]
@@ -22,6 +23,7 @@ DocStringExtensions = "~0.8"
 ElasticArrays = "~1"
 ForwardDiff = "~0.10"
 McCormick = "~0.1"
+Reexport = "~0.2"
 Sundials = "3.8.3"
 
 
