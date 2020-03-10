@@ -1,6 +1,6 @@
 module DynamicBoundspODEsIneq
 
-using DynamicBoundsBase, DynamicBoundspODEs, McCormick, ElasticArrays, DocStringExtensions
+using DynamicBoundsBase, McCormick, ElasticArrays, DocStringExtensions
 using ForwardDiff: Chunk, Dual, Partials, construct_seeds, single_seed
 using DiffEqSensitivity: extract_local_sensitivities, ODEForwardSensitivityProblem
 using DiffEqBase: remake, AbstractODEProblem, AbstractContinuousCallback, solve
