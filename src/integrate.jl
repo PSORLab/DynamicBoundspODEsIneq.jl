@@ -1,4 +1,4 @@
-function integrate!(d::Scott2013{F, N, T, PRB1, PRB2, INT1, CB}) where {F, N, T<:RelaxTag, PRB1<:AbstractODEProblem,
+function integrate!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) where {F, N, T<:RelaxTag, PRB1<:AbstractODEProblem,
                                                           PRB2<:AbstractODEProblem, INT1,
                                                           CB<:AbstractContinuousCallback}
 

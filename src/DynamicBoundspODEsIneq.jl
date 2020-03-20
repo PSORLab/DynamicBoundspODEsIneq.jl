@@ -7,10 +7,10 @@ using DiffEqBase: remake, AbstractODEProblem, AbstractContinuousCallback, solve
 using Sundials
 
 import DynamicBoundsBase: relax!, set, setall!, get, getall!, relax!
-export Scott2013, set, setall!, get, getall!, relax!
+export DifferentialInequality, set, setall!, get, getall!, relax!
 include("local_integration_problem.jl")
 include("contractors.jl")
-include("Scott2013.jl")
+include("DifferentialInequality.jl")
 
 import DynamicBoundsBase: integrate!
 export integrate!

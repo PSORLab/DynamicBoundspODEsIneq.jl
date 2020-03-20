@@ -1,4 +1,4 @@
-using DynamicBoundspODEs, DynamicBoundspODEsIneq
+using DynamicBoundspODEsIneq, DynamicBoundsBase, Sundials, DifferentialEquations
 
 x0(p) = [34.0; 20.0; 0.0; 0.0; 16.0; 0.0]
 function f!(du, u, p, t)
@@ -12,11 +12,11 @@ function f!(du, u, p, t)
 end
 
 
-tspan = (0.0,18.0e-5*250)
+tspan = (0.0,18.0e-5*50)
 pL = [0.1; 0.033; 16.0; 5.0; 0.5; 0.3]
 pU = 10.0*pL
 
-prob = ODERelaxProb(f!, tspan, x0, pL, pU)
+prob = DynamicBoundsBase.ODERelaxProb(f!, tspan, x0, pL, pU)
 
 A = [0.0 -1.0 -1.0  0.0  0.0  0.0;
      0.0  0.0  0.0  0.0 -1.0 -1.0;
@@ -28,12 +28,16 @@ xL = zeros(6)
 xU = [34.0; 20.0; 20.0; 34.0; 16.0; 16.0]
 set!(prob, ConstantStateBounds(xL,xU))
 
-Scott2013(prob, calculate_relax = false, calculate_subgradient = false)
-integrator = Scott2013(prob, calculate_relax = false, calculate_subgradient = false)
+integrator = DifferentialInequality(prob, calculate_relax = true,
+                                    calculate_subgradient = true,
+                                    relax_ode_integrator = CVODE_Adams(),
+                                    local_ode_integrator = CVODE_Adams())
 
 relax!(integrator)
 
 ratio = rand(6)
 pstar = pL.*ratio .+ pU.*(1.0 .- ratio)
 setall!(integrator, ParameterValue(), pstar)
-integrate!(integrator)
+#integrate!(integrator)
+
+#getall!()
