@@ -1,7 +1,7 @@
 #!/usr/bin/env julia
 using Test, DynamicBoundspODEsIneq, DynamicBoundsBase, Sundials
 
-@testset "Integrator Attributes Interface" begin
+@testset "Test DifferentialInequality Relaxation" begin
 
     x0(p) = [34.0; 20.0; 0.0; 0.0; 16.0; 0.0]
     function f!(du, u, p, t)
