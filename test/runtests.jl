@@ -1,5 +1,5 @@
 #!/usr/bin/env julia
-using Test, DynamicBoundspODEsIneq, DynamicBoundsBase, Sundials
+using Test, DynamicBoundspODEsIneq, DynamicBoundsBase
 
 @testset "Test DifferentialInequality Relaxation" begin
 
@@ -32,9 +32,7 @@ using Test, DynamicBoundspODEsIneq, DynamicBoundsBase, Sundials
     set!(prob, ConstantStateBounds(xL,xU))
 
     integrator = DifferentialInequality(prob, calculate_relax = true,
-                                        calculate_subgradient = true,
-                                        relax_ode_integrator = CVODE_Adams(),
-                                        local_ode_integrator = CVODE_Adams())
+                                        calculate_subgradient = true)
 
     relax!(integrator)
 
