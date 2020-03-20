@@ -3,8 +3,7 @@ Differential Inequality Algorithms for DynamicBounds.jl
 
 | **Linux/OS**                                                                     | **Windows**                                             |                       
 |:--------------------------------------------------------------------------------:|:-------------------------------------------------------:|
-|  | [![Build status](https://ci.appveyor.com/api/projects/status/ewhcnsx67svk6wa0?svg=true)](https://ci.appveyor.com/project/mewilhel/dynamicboundspodesineq-jl)
- |
+| [![Build Status](https://travis-ci.org/PSORLab/DynamicBoundspODEsIneq.jl.svg?branch=master)](https://travis-ci.org/PSORLab/DynamicBoundspODEsIneq.jl) | [![Build status](https://ci.appveyor.com/api/projects/status/ewhcnsx67svk6wa0?svg=true)](https://ci.appveyor.com/project/mewilhel/dynamicboundspodesineq-jl) |
 
 ## Summary
 This package implements a continuous time differential inequality approach to
