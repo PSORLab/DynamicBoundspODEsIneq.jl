@@ -7,9 +7,9 @@ struct DifferentialInequalityCond <: Function
     etol::Float64
 end
 function (d::DifferentialInequalityCond)(g, u::Vector{Float64}, t::Float64, integrator)::Nothing
-    for i=1:d.nx
-        g[i] = u[2*d.nx + i] - u[i] - integrator.p[d.np+i]*d.etol
-        g[d.nx+i] = u[d.nx + i] - u[3*d.nx + i]  - integrator.p[d.np+d.nx+i]*d.etol
+    for i = 1:d.nx
+        g[i] = u[2*d.nx + i] - u[i] - integrator.p[d.np + i]*d.etol
+        g[d.nx+i] = u[d.nx + i] - u[3*d.nx + i]  - integrator.p[d.np+d.nx + i]*d.etol
         integrator.p[d.np + 2*d.nx + i] = u[2*d.nx + i] - u[i]          # positive if cv > lo
         integrator.p[d.np + 3*d.nx + i] = u[d.nx + i] - u[3*d.nx + i]   # positive if hi > cc
     end
@@ -68,10 +68,10 @@ end
 function DifferentialInequalityf(f!, Z, nx::Int, np::Int, P, relax::Bool, subgrad::Bool,
                     polyhedral_constraint, Xapriori)
      np = length(P)
-     DifferentialInequalityf{Z,typeof(f!)}(f!, nx, size(polyhedral_constraint.A,1), np, zeros(Z,np), P,
-                              zeros(Interval{Float64},nx), zeros(Z,nx), zeros(Z,nx),
-                              zeros(Interval{Float64},nx), zeros(Interval{Float64},nx),
-                              zeros(Interval{Float64},nx), zeros(Interval{Float64},nx),
+     DifferentialInequalityf{Z,typeof(f!)}(f!, nx, size(polyhedral_constraint.A, 1), np, zeros(Z, np), P,
+                              zeros(Interval{Float64}, nx), zeros(Z, nx), zeros(Z, nx),
+                              zeros(Interval{Float64}, nx), zeros(Interval{Float64}, nx),
+                              zeros(Interval{Float64}, nx), zeros(Interval{Float64}, nx),
                               relax, subgrad, 1:np, 1:nx, polyhedral_constraint, false, Xapriori)
 end
 
@@ -86,7 +86,7 @@ function (d::DifferentialInequalityf{MC{N,T},F})(dx::Vector{Float64}, x::Vector{
         d.p_mc.= MC{N,T}.(p[1:np], d.P, d.prng)
     end
 
-    for i=d.xrng
+    for i = d.xrng
         d.X[i] = Interval{Float64}(x[i], x[nx + i])
         if d.calculate_relax
             is_cvmid::Bool = (x[i] <= x[2*nx + i] <= x[nx + i]) && d.calculate_subgradient
@@ -94,12 +94,12 @@ function (d::DifferentialInequalityf{MC{N,T},F})(dx::Vector{Float64}, x::Vector{
             cvmid::Float64, _ = mid3(x[i], x[nx + i], x[2*nx + i])
             ccmid::Float64, _ = mid3(x[i], x[nx + i], x[3*nx + i])
             if is_cvmid
-                cvsgmid::SVector{N,Float64} = SVector{N}([x[4*nx + N*(i-1) + j] for j=d.prng])
+                cvsgmid::SVector{N,Float64} = SVector{N}([x[4*nx + N*(i-1) + j] for j = d.prng])
             else
                 cvsgmid = zero(SVector{N,Float64})
             end
             if is_ccmid
-                ccsgmid::SVector{N,Float64} = SVector{N}([x[4*nx + N*(nx+i-1) + j] for j=d.prng])
+                ccsgmid::SVector{N,Float64} = SVector{N}([x[4*nx + N*(nx+i-1) + j] for j = d.prng])
             else
                 ccsgmid = zero(SVector{N,Float64})
             end
@@ -113,7 +113,7 @@ function (d::DifferentialInequalityf{MC{N,T},F})(dx::Vector{Float64}, x::Vector{
         d.f!(d.xout_mc, d.x_mc, d.p_mc, t)
     end
 
-    for i=d.xrng
+    for i = d.xrng
         d.BetaL[i] = @interval(x[i])
         polyhedral_contact!(d.polyhedral_constraint, d.BetaL, d.Xapriori, nx, nm)
         d.f!(d.xout_intv1, d.BetaL, d.P, @interval(t))
@@ -184,7 +184,7 @@ Otherwise, only `np` parameter values are used.
 $(TYPEDFIELDS)
 """
 mutable struct DifferentialInequality{F, N, T<:RelaxTag, PRB1<:AbstractODEProblem, PRB2<:AbstractODEProblem,
-                 INT1, CB<:AbstractContinuousCallback} <: AbstractODERelaxIntegator
+                 INT1, CB<:AbstractContinuousCallback} <: AbstractODERelaxIntegrator
     calculate_relax::Bool
     calculate_subgradient::Bool
     differentiable::Bool
@@ -296,14 +296,14 @@ function relax!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) where 
         d.x0_mc = d.x0f(d.p_mc)
         for i=1:d.nx
             d.x0[i] = d.x0_mc[i].Intv.lo
-            d.x0[d.nx+i] = d.x0_mc[i].Intv.hi
+            d.x0[d.nx + i] = d.x0_mc[i].Intv.hi
             if d.calculate_relax
-                d.x0[2*d.nx+i] = d.x0_mc[i].cv
-                d.x0[3*d.nx+i] = d.x0_mc[i].cc
+                d.x0[2*d.nx + i] = d.x0_mc[i].cv
+                d.x0[3*d.nx + i] = d.x0_mc[i].cc
                 if d.calculate_subgradient
-                    for j=1:d.np
-                        d.x0[4*d.nx + j + d.np*(i-1)] = d.x0_mc[i].cv_grad[j]
-                        d.x0[(4+d.np)*d.nx + j + d.np*(i-1)] = d.x0_mc[i].cc_grad[j]
+                    for j = 1:d.np
+                        d.x0[4*d.nx + j + d.np*(i - 1)] = d.x0_mc[i].cv_grad[j]
+                        d.x0[(4 + d.np)*d.nx + j + d.np*(i - 1)] = d.x0_mc[i].cc_grad[j]
                     end
                 end
             end
@@ -331,19 +331,19 @@ function relax!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) where 
             time_step_sol::Vector{Float64} = relax_ode_sol[i]
             for j in 1:d.nx
                 step_lo::Float64 = time_step_sol[j]
-                step_hi::Float64 = time_step_sol[d.nx+j]
+                step_hi::Float64 = time_step_sol[d.nx + j]
                 d.relax_lo[j,i] = step_lo
                 d.relax_hi[j,i] = step_hi
                 if d.calculate_relax
-                    step_cv::Float64 = time_step_sol[2*d.nx+j]
-                    step_cc::Float64 = time_step_sol[3*d.nx+j]
-                    d.relax_cv[j,i] = step_cv
-                    d.relax_cc[j,i] = step_cc
+                    step_cv::Float64 = time_step_sol[2*d.nx + j]
+                    step_cc::Float64 = time_step_sol[3*d.nx + j]
+                    d.relax_cv[j, i] = step_cv
+                    d.relax_cc[j, i] = step_cc
                     if d.calculate_subgradient
-                        step_cv_grad::SVector{N,Float64} = SVector{N}(Float64[time_step_sol[4*d.nx + d.np*(j-1) + k] for k=1:d.np])
-                        step_cc_grad::SVector{N,Float64} = SVector{N}(Float64[time_step_sol[4*d.nx + d.np*(d.nx+j-1) + k] for k=1:d.np])
-                        d.relax_cv_grad[j,i] = step_cv_grad
-                        d.relax_cc_grad[j,i] = step_cc_grad
+                        step_cv_grad::SVector{N,Float64} = SVector{N}(Float64[time_step_sol[4*d.nx + d.np*(j - 1) + k] for k = 1:d.np])
+                        step_cc_grad::SVector{N,Float64} = SVector{N}(Float64[time_step_sol[4*d.nx + d.np*(d.nx + j - 1) + k] for k = 1:d.np])
+                        d.relax_cv_grad[j, i] = step_cv_grad
+                        d.relax_cc_grad[j, i] = step_cc_grad
                     else
                         step_cv_grad = zero(SVector{d.np,Float64})::SVector{N,Float64}
                         step_cc_grad = zero(SVector{d.np,Float64})::SVector{N,Float64}

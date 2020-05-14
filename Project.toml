@@ -18,11 +18,7 @@ Sundials = "c3572dad-4567-51f8-b174-8c6c989267f4"
 DiffEqBase = "6.12.2"
 DiffEqSensitivity = "~6"
 DocStringExtensions = "~0.8"
-<<<<<<< HEAD
 DynamicBoundsBase = "~0.3"
-=======
-DynamicBoundsBase = "0.2"
->>>>>>> master
 ElasticArrays = "~1"
 ForwardDiff = "~0.10"
 McCormick = "~0.5"
