@@ -61,7 +61,7 @@ struct DifferentialInequalityf{Z, F} <: Function
     calculate_subgradient::Bool
     prng::UnitRange{Int64}
     xrng::UnitRange{Int64}
-    polyhedral_constraint::PolyhedralConstraint
+    polyhedral_constraint::Union{PolyhedralConstraint, Nothing}
     has_apriori::Bool
     Xapriori::Vector{Interval{Float64}}
 end
