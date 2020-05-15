@@ -1,12 +1,17 @@
-struct RelaxDualTag end
 
+"""
+LocalProblemStorage{PRB, N}
+
+Storage for the pODE problem corresponding to the local solution of the corresponding
+differential equation for the relaxation problem.
+"""
 mutable struct LocalProblemStorage{PRB, N}
     pode_problem
     pode_x::ElasticArray{Float64,2}
     pode_dxdp::Vector{ElasticArray{Float64,2}}
     x0local::Vector{Float64}
-    pduals::Vector{Dual{RelaxDualTag,Float64,N}}
-    x0duals::Vector{Dual{RelaxDualTag,Float64,N}}
+    pduals::Vector{Dual{Nothing,Float64,N}}
+    x0duals::Vector{Dual{Nothing,Float64,N}}
     integator
     user_t::Vector{Float64}
     integrator_t::Vector{Float64}
@@ -17,7 +22,7 @@ problem_type(x::LocalProblemStorage{N}) where {N} = typeof(pode_problem)
 
 function seed_duals(x::AbstractArray{V}, ::Chunk{N} = Chunk(x)) where {V,N}
   seeds = construct_seeds(Partials{N,V})
-  duals = [Dual{RelaxDualTag}(x[i],seeds[i]) for i in eachindex(x)]
+  duals = [Dual{Nothing}(x[i],seeds[i]) for i in eachindex(x)]
 end
 
 function LocalProblemStorage(d::ODERelaxProb, integator, user_t::Vector{Float64})
@@ -27,7 +32,7 @@ function LocalProblemStorage(d::ODERelaxProb, integator, user_t::Vector{Float64}
     pode_dxdp = Array{Float64,2}[zeros(Float64, d.nx, length(d.tsupports)) for i=1:np]
     pduals = seed_duals(d.p)
     sing_seed = single_seed(Partials{np, Float64}, Val(1))
-    x0duals = fill(Dual{RelaxDualTag}(0.0, sing_seed), (d.nx,))
+    x0duals = fill(Dual{Nothing}(0.0, sing_seed), (d.nx,))
     x0local = zeros((np+1)*d.nx)
     local_problem_storage = LocalProblemStorage{typeof(pode_problem), np}(pode_problem, pode_x, pode_dxdp,
                                                     x0local, pduals, x0duals, integator, user_t, Float64[],

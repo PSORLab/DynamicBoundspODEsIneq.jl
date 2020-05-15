@@ -1,6 +1,11 @@
 const POLYHEDRON_A_TOL = 1e-4
 const POLYHEDRON_WIDTH_TOL = 1e-12
 
+"""
+$(FUNCTIONNAME)
+
+Contracts the state variable bounds based on the `PolyhedralConstraint`.
+"""
 function polyhedral_contact!(d::PolyhedralConstraint, Xin::Vector{Interval{Float64}}, Xp::Vector{Interval{Float64}}, nx::Int, nm::Int)
     X = Xin
     A = d.A

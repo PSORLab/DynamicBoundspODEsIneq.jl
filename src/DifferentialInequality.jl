@@ -1,5 +1,7 @@
 """
 $(TYPEDEF)
+
+A functor used to check for an event were a relaxation ODE crosses the an interval bound ODE.
 """
 struct DifferentialInequalityCond <: Function
     nx::Int
@@ -18,6 +20,8 @@ end
 
 """
 $(TYPEDEF)
+
+A functor that sets an indicator parameter to zero if a positive event crossing occurs.
 """
 struct DifferentialInequalityAffect <: Function
     np::Int
@@ -30,6 +34,8 @@ end
 
 """
 $(TYPEDEF)
+
+A functor that sets an indicator parameter to zero if a negative event crossing occurs.
 """
 struct DifferentialInequalityAffectNeg <: Function
     np::Int
@@ -42,14 +48,23 @@ end
 
 """
 $(TYPEDEF)
+
+A Functor used to evaluate the r.h.s of the differential inequality.
 """
 struct DifferentialInequalityf{Z, F} <: Function
+    "Right-hand side function"
     f!::F
+    "Number of state variables"
     nx::Int
+    "Dimensionality of polyhedral constraints."
     nm::Int
+    "Number of decision variables"
     np::Int
+    "Decision variable relaxation storage"
     p_mc::Vector{Z}
+    "Decision variable interval bounds"
     P::Vector{Interval{Float64}}
+    "Constrant state variable interval bounds"
     X::Vector{Interval{Float64}}
     x_mc::Vector{Z}
     xout_mc::Vector{Z}
@@ -57,7 +72,9 @@ struct DifferentialInequalityf{Z, F} <: Function
     BetaU::Vector{Interval{Float64}}
     xout_intv1::Vector{Interval{Float64}}
     xout_intv2::Vector{Interval{Float64}}
+    "Indicates that relaxations should be computed."
     calculate_relax::Bool
+    "Indicates that subgradients should be computed (`calculate_relax` must be `true`)."
     calculate_subgradient::Bool
     prng::UnitRange{Int64}
     xrng::UnitRange{Int64}
@@ -65,6 +82,13 @@ struct DifferentialInequalityf{Z, F} <: Function
     has_apriori::Bool
     Xapriori::Vector{Interval{Float64}}
 end
+
+
+"""
+DifferentialInequalityf(f!, Z, nx, np, P, relax, subgrad, polyhedral_constraint, Xapriori)
+
+A Functor used to evaluate the r.h.s of the differential inequality.
+"""
 function DifferentialInequalityf(f!, Z, nx::Int, np::Int, P, relax::Bool, subgrad::Bool,
                     polyhedral_constraint, Xapriori)
      np = length(P)
@@ -215,6 +239,12 @@ mutable struct DifferentialInequality{F, N, T<:RelaxTag, PRB1<:AbstractODEProble
     nx::Int
     polyhedral_constraint::Union{PolyhedralConstraint,Nothing}
 end
+
+"""
+DifferentialInequality(d::ODERelaxProb; kwargs...)
+
+Constructor for DifferentialInequality integrator.
+"""
 function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
                    calculate_subgradient::Bool = true,
                    differentiable::Bool = false,
