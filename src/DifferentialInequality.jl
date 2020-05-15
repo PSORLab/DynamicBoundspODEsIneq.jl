@@ -357,28 +357,28 @@ function relax!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) where 
     return
 end
 
-supports(::DifferentialInequality, ::IntegratorName) = true
-supports(::DifferentialInequality, ::Gradient) = true
-supports(::DifferentialInequality, ::Subgradient) = true
-supports(::DifferentialInequality, ::Bound) = true
-supports(::DifferentialInequality, ::Relaxation) = true
-supports(::DifferentialInequality, ::IsNumeric) = true
-supports(::DifferentialInequality, ::IsSolutionSet) = true
-supports(::DifferentialInequality, ::TerminationStatus) = true
-supports(::DifferentialInequality, ::Value) = true
-supports(::DifferentialInequality, ::ParameterValue) = true
+DBB.supports(::DifferentialInequality, ::DBB.IntegratorName) = true
+DBB.supports(::DifferentialInequality, ::DBB.Gradient) = true
+DBB.supports(::DifferentialInequality, ::DBB.Subgradient) = true
+DBB.supports(::DifferentialInequality, ::DBB.Bound) = true
+DBB.supports(::DifferentialInequality, ::DBB.Relaxation) = true
+DBB.supports(::DifferentialInequality, ::DBB.IsNumeric) = true
+DBB.supports(::DifferentialInequality, ::DBB.IsSolutionSet) = true
+DBB.supports(::DifferentialInequality, ::DBB.TerminationStatus) = true
+DBB.supports(::DifferentialInequality, ::DBB.Value) = true
+DBB.supports(::DifferentialInequality, ::DBB.ParameterValue) = true
 
-get(t::DifferentialInequality, v::IntegratorName) = "Scott 2013 Integrator"
-get(t::DifferentialInequality, v::IsNumeric) = false
-get(t::DifferentialInequality, v::IsSolutionSet) = true
-get(t::DifferentialInequality, s::TerminationStatus) = t.termination_status
+DBB.get(t::DifferentialInequality, v::DBB.IntegratorName) = "DifferentialInequality Integrator"
+DBB.get(t::DifferentialInequality, v::DBB.IsNumeric) = false
+DBB.get(t::DifferentialInequality, v::DBB.IsSolutionSet) = true
+DBB.get(t::DifferentialInequality, s::DBB.TerminationStatus) = t.integrator_state.termination_status
 
-function getall!(out::Array{Float64,2}, t::DifferentialInequality, v::Value)
+function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Value)
     out .= t.local_problem_storage.pode_x
     return
 end
 
-function getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::Gradient{Nominal})
+function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Gradient{Nominal})
     for i in 1:t.np
         @inbounds for j in eachindex(out[i])
             out[i][j] = t.local_problem_storage.pode_dxdp[i][j]
@@ -387,7 +387,7 @@ function getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::Gr
     return
 end
 
-function getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::Gradient{Lower})
+function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Gradient{Lower})
     if ~t.differentiable
         error("Integrator does not generate differential relaxations. Set the
                differentiable_flag field to true and reintegrate.")
@@ -403,7 +403,7 @@ function getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::Gr
     end
     return
 end
-function getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::Gradient{Upper})
+function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Gradient{Upper})
     if ~t.differentiable_flag
         error("Integrator does not generate differential relaxations. Set the
                differentiable_flag field to true and reintegrate.")
@@ -420,7 +420,7 @@ function getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::Gr
     return
 end
 
-function getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::Subgradient{Lower})
+function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Subgradient{Lower})
     for i in 1:t.np
         if t.evaluate_interval
             fill!(out[i], 0.0)
@@ -432,7 +432,7 @@ function getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::Su
     end
     return
 end
-function getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::Subgradient{Upper})
+function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Subgradient{Upper})
     for i in 1:t.np
         if t.evaluate_interval
             fill!(out[i], 0.0)
@@ -445,27 +445,27 @@ function getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::Su
     return
 end
 
-function getall!(out::Array{Float64,2}, t::DifferentialInequality, v::Bound{Lower})
+function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Bound{Lower})
     out .= t.relax_lo
     return
 end
 
-function getall!(out::Vector{Float64}, t::DifferentialInequality, v::Bound{Lower})
+function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Bound{Lower})
     out[:] = t.relax_lo[1,:]
     return
 end
 
-function getall!(out::Array{Float64,2}, t::DifferentialInequality, v::Bound{Upper})
+function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Bound{Upper})
     out .= t.relax_hi
     return
 end
 
-function getall!(out::Vector{Float64}, t::DifferentialInequality, v::Bound{Upper})
+function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Bound{Upper})
     out[:] = t.relax_hi[1,:]
     return
 end
 
-function getall!(out::Array{Float64,2}, t::DifferentialInequality, v::Relaxation{Lower})
+function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Relaxation{Lower})
     if t.evaluate_interval
         @inbounds for i in eachindex(out)
             out[i] = t.relax_lo[i]
@@ -477,7 +477,7 @@ function getall!(out::Array{Float64,2}, t::DifferentialInequality, v::Relaxation
     end
     return
 end
-function getall!(out::Vector{Float64}, t::DifferentialInequality, v::Relaxation{Lower})
+function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Relaxation{Lower})
     if t.evaluate_interval
         @inbounds for i in eachindex(out)
             out[i] = t.X[i].lo
@@ -490,7 +490,7 @@ function getall!(out::Vector{Float64}, t::DifferentialInequality, v::Relaxation{
     return
 end
 
-function getall!(out::Array{Float64,2}, t::DifferentialInequality, v::Relaxation{Upper})
+function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Relaxation{Upper})
     if t.evaluate_interval
         @inbounds for i in eachindex(out)
             out[i] = t.X[i].hi
@@ -502,7 +502,7 @@ function getall!(out::Array{Float64,2}, t::DifferentialInequality, v::Relaxation
     end
     return
 end
-function getall!(out::Vector{Float64}, t::DifferentialInequality, v::Relaxation{Upper})
+function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Relaxation{Upper})
     if t.evaluate_interval
         @inbounds for i in eachindex(out)
             out[i] = t.X[i].hi
@@ -515,7 +515,7 @@ function getall!(out::Vector{Float64}, t::DifferentialInequality, v::Relaxation{
     return
 end
 
-function setall!(t::DifferentialInequality, v::ParameterBound{Lower}, value::Vector{Float64})
+function DBB.setall!(t::DifferentialInequality, v::DBB.ParameterBound{Lower}, value::Vector{Float64})
     t.integrator_state.new_decision_box = true
     @inbounds for i in 1:t.np
         t.pL[i] = value[i]
@@ -523,7 +523,7 @@ function setall!(t::DifferentialInequality, v::ParameterBound{Lower}, value::Vec
     return
 end
 
-function setall!(t::DifferentialInequality, v::ParameterBound{Upper}, value::Vector{Float64})
+function DBB.setall!(t::DifferentialInequality, v::DBB.ParameterBound{Upper}, value::Vector{Float64})
     t.integrator_state.new_decision_box = true
     @inbounds for i in 1:t.np
         t.pU[i] = value[i]
@@ -531,7 +531,7 @@ function setall!(t::DifferentialInequality, v::ParameterBound{Upper}, value::Vec
     return
 end
 
-function setall!(t::DifferentialInequality, v::ParameterValue, value::Vector{Float64})
+function DBB.setall!(t::DifferentialInequality, v::DBB.ParameterValue, value::Vector{Float64})
     t.integrator_state.new_decision_pnt = true
     @inbounds for i in 1:t.np
         t.p[i] = value[i]
@@ -539,7 +539,7 @@ function setall!(t::DifferentialInequality, v::ParameterValue, value::Vector{Flo
     return
 end
 
-function setall!(t::DifferentialInequality, v::Bound{Lower}, values::Array{Float64,2})
+function DBB.setall!(t::DifferentialInequality, v::DBB.Bound{Lower}, values::Array{Float64,2})
     if t.integrator_state.new_decision_box
         t.integrator_state.set_lower_state = true
     end
@@ -551,7 +551,7 @@ function setall!(t::DifferentialInequality, v::Bound{Lower}, values::Array{Float
     return
 end
 
-function setall!(t::DifferentialInequality, v::Bound{Lower}, values::Vector{Float64})
+function DBB.setall!(t::DifferentialInequality, v::DBB.Bound{Lower}, values::Vector{Float64})
     if t.integrator_state.new_decision_box
         t.integrator_state.set_lower_state = true
     end
@@ -561,7 +561,7 @@ function setall!(t::DifferentialInequality, v::Bound{Lower}, values::Vector{Floa
     return
 end
 
-function setall!(t::DifferentialInequality, v::Bound{Upper}, values::Array{Float64,2})
+function DBB.setall!(t::DifferentialInequality, v::DBB.Bound{Upper}, values::Array{Float64,2})
     if t.integrator_state.new_decision_box
         t.integrator_state.set_upper_state = true
     end
@@ -573,7 +573,7 @@ function setall!(t::DifferentialInequality, v::Bound{Upper}, values::Array{Float
     return
 end
 
-function setall!(t::DifferentialInequality, v::Bound{Upper}, values::Vector{Float64})
+function DBB.setall!(t::DifferentialInequality, v::DBB.Bound{Upper}, values::Vector{Float64})
     if t.integrator_state.new_decision_box
         t.integrator_state.set_upper_state = true
     end

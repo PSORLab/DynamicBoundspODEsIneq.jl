@@ -6,6 +6,8 @@ using DiffEqSensitivity: extract_local_sensitivities, ODEForwardSensitivityProbl
 using DiffEqBase: remake, AbstractODEProblem, AbstractContinuousCallback, solve
 using Sundials
 
+const DBB = DynamicBoundsBase
+
 import DynamicBoundsBase: relax!, set!, setall!, get, getall!, relax!
 export DifferentialInequality, set!, setall!, get, getall!, relax!
 include("local_integration_problem.jl")
