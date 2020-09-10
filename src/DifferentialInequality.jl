@@ -1,3 +1,16 @@
+# Copyright (c) 2020: Matthew Wilhelm & Matthew Stuber.
+# This work is licensed under the Creative Commons Attribution-NonCommercial-
+# ShareAlike 4.0 International License. To view a copy of this license, visit
+# http://creativecommons.org/licenses/by-nc-sa/4.0/ or send a letter to Creative
+# Commons, PO Box 1866, Mountain View, CA 94042, USA.
+#############################################################################
+# DynamicBoundspODEIneq.jl
+# See https://github.com/PSORLab/DynamicBoundspODEIneq.jl
+#############################################################################
+# src/DifferentialInequality.jl
+# Defines storage structures, the main relaxation routine, and access functions.
+#############################################################################
+
 """
 $(TYPEDEF)
 
@@ -64,13 +77,19 @@ struct DifferentialInequalityf{Z, F} <: Function
     p_mc::Vector{Z}
     "Decision variable interval bounds"
     P::Vector{Interval{Float64}}
-    "Constrant state variable interval bounds"
+    "Constraint state variable interval bounds"
     X::Vector{Interval{Float64}}
+    "Input State Variable Temporary Storage"
     x_mc::Vector{Z}
+    "Output State Variable Temporary Storage"
     xout_mc::Vector{Z}
+    "Temporary Storage for Lower Beta"
     BetaL::Vector{Interval{Float64}}
+    "Temporary Storage for Upper Beta"
     BetaU::Vector{Interval{Float64}}
+    "Temporary Storage"
     xout_intv1::Vector{Interval{Float64}}
+    "Temporary Storage"
     xout_intv2::Vector{Interval{Float64}}
     "Indicates that relaxations should be computed."
     calculate_relax::Bool
@@ -78,6 +97,7 @@ struct DifferentialInequalityf{Z, F} <: Function
     calculate_subgradient::Bool
     prng::UnitRange{Int64}
     xrng::UnitRange{Int64}
+    "Polyhedral constraint used"
     polyhedral_constraint::Union{PolyhedralConstraint, Nothing}
     has_apriori::Bool
     Xapriori::Vector{Interval{Float64}}
@@ -234,7 +254,7 @@ mutable struct DifferentialInequality{F, N, T<:RelaxTag, PRB1<:AbstractODEProble
     relax_mc::ElasticArray{MC{N,T},2,1}
     vector_callback::CB
     integrator_state::IntegratorStates
-    local_problem_storage::LocalProblemStorage{PRB2, N}
+    local_problem_storage::LocalProblemStorage{PRB2, INT1, N}
     np::Int
     nx::Int
     polyhedral_constraint::Union{PolyhedralConstraint,Nothing}
@@ -404,7 +424,9 @@ DBB.get(t::DifferentialInequality, v::DBB.IsSolutionSet) = true
 DBB.get(t::DifferentialInequality, s::DBB.TerminationStatus) = t.integrator_state.termination_status
 
 function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Value)
-    out .= t.local_problem_storage.pode_x
+    for i in 1:length(t.local_problem_storage.pode_x)
+        out[i,:] .= t.local_problem_storage.pode_x[i]
+    end
     return
 end
 
@@ -566,6 +588,24 @@ function DBB.setall!(t::DifferentialInequality, v::DBB.ParameterValue, value::Ve
     @inbounds for i in 1:t.np
         t.p[i] = value[i]
     end
+    return
+end
+
+function DBB.set!(t::DifferentialInequality, v::DBB.ParameterBound{Lower}, value::T) where T <: Union{Integer, AbstractFloat}
+    t.integrator_state.new_decision_box = true
+    @inbounds t.pL[v.i] = value[v.i]
+    return
+end
+
+function DBB.set!(t::DifferentialInequality, v::DBB.ParameterBound{Upper}, value::T) where T <: Union{Integer, AbstractFloat}
+    t.integrator_state.new_decision_box = true
+    @inbounds t.pU[v.i] = value[v.i]
+    return
+end
+
+function DBB.set!(t::DifferentialInequality, v::DBB.ParameterValue, value::T) where T <: Union{Integer, AbstractFloat}
+    t.integrator_state.new_decision_pnt = true
+    @inbounds t.p[v.i] = value[v.i]
     return
 end
 

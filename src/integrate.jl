@@ -1,3 +1,16 @@
+# Copyright (c) 2020: Matthew Wilhelm & Matthew Stuber.
+# This work is licensed under the Creative Commons Attribution-NonCommercial-
+# ShareAlike 4.0 International License. To view a copy of this license, visit
+# http://creativecommons.org/licenses/by-nc-sa/4.0/ or send a letter to Creative
+# Commons, PO Box 1866, Mountain View, CA 94042, USA.
+#############################################################################
+# DynamicBoundspODEIneq.jl
+# See https://github.com/PSORLab/DynamicBoundspODEIneq.jl
+#############################################################################
+# src/integrate.jl
+# Code used to integrate but not relax the underlying parametric ODE system.
+#############################################################################
+
 function integrate!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) where {F, N, T<:RelaxTag, PRB1<:AbstractODEProblem,
                                                           PRB2<:AbstractODEProblem, INT1,
                                                           CB<:AbstractContinuousCallback}
