@@ -1,9 +1,9 @@
 # DynamicBoundspODEsIneq.jl
 Differential Inequality Algorithms for DynamicBounds.jl
 
-| **Linux/OS**                                                                     | **Windows**                                             | **Coverage**                                             |                       
-|:--------------------------------------------------------------------------------:|:-------------------------------------------------------:|:-------------------------------------------------------:|
-| [![Build Status](https://travis-ci.org/PSORLab/DynamicBoundspODEsIneq.jl.svg?branch=master)](https://travis-ci.org/PSORLab/DynamicBoundspODEsIneq.jl) | [![Build status](https://ci.appveyor.com/api/projects/status/ewhcnsx67svk6wa0?svg=true)](https://ci.appveyor.com/project/mewilhel/dynamicboundspodesineq-jl) | [![Coverage Status](https://coveralls.io/repos/github/PSORLab/DynamicBoundspODEsIneq.jl/badge.svg?branch=master)](https://coveralls.io/github/PSORLab/DynamicBoundspODEsIneq.jl?branch=master) |                       
+| **Linux/OS/Windows**                                                                     | **Coverage**                                             |                       
+|:--------------------------------------------------------------------------------:|:-------------------------------------------------------:|
+| [![Build Status](https://travis-ci.org/PSORLab/DynamicBoundspODEsIneq.jl.svg?branch=master)](https://travis-ci.org/PSORLab/DynamicBoundspODEsIneq.jl) | [![Coverage Status](https://coveralls.io/repos/github/PSORLab/DynamicBoundspODEsIneq.jl/badge.svg?branch=master)](https://coveralls.io/github/PSORLab/DynamicBoundspODEsIneq.jl?branch=master) |                       
 
 ## Summary
 This package implements a continuous time differential inequality approach to
