@@ -7,7 +7,7 @@ Differential Inequality Algorithms for DynamicBounds.jl
 
 ## Summary
 This package implements a continuous-time differential inequality approach to
-computing state bounds and relaxations using the DynamicBounds.jl framework. These methods solve auxiliary ODE/DAEs to generate relaxations of parametric pODES/pDAEs at specific points in time. Full documentation of this functionality may be found [here](link) in the DynamicBounds.jl website.
+computing state bounds and relaxations using the DynamicBounds.jl framework. These methods solve auxiliary ODE/DAEs to generate relaxations of parametric pODES/pDAEs at specific points in time. Full documentation of this functionality may be found [here](https://psorlab.github.io/DynamicBounds.jl/dev/pODEsIneq/pODEsIneq) in the DynamicBounds.jl website.
 
 ## References
 - JK Scott, PI Barton, *Bounds on the reachable sets of nonlinear control systems*,
