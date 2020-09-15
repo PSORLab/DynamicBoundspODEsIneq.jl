@@ -215,7 +215,9 @@ end
 $(TYPEDEF)
 
 The DifferentialInequality type integrator represents the relaxed pODE problem as a
-2*nx ODE problem is `calculate_relax` is `false`4*nx + 4*np*nx
+2*nx dimension ODE problem if `calculate_relax` is `false`, a 4*nx dimension ODE problem
+if `calculate_relax` is `true` and `4*nx + 4*np*nx` if `calculate_subgradients` is also
+set to `true`.
 - `x[1:nx]` are the lower interval bounds
 - `x[(1+nx):2*nx]` are upper interval bounds
 - `x[(1+2*nx):3*nx]` are convex relaxations (computed if calculate_relax = true)
@@ -223,7 +225,7 @@ The DifferentialInequality type integrator represents the relaxed pODE problem a
 - `x[(1+4*nx):(4+np)*nx]` are subgradients of the convex relaxations (computed if calculate_subgradients = true)
 - `x[(1+(4+np)*nx):(4+2*np)*nx]` are subgradients of the concave relaxations (computed if calculate_subgradients = true)
 The first `np` parameter values correspond to the parameter values in the original
-problem. If (calculate_relax = true) then `(np+1):(np+nx)` parameter values correspond
+problem. If (`calculate_relax == true`) then `(np+1):(np+nx)` parameter values correspond
 to the `b_i^c` variables used to detect a relaxation crossing a lower state bound.
 The `(np+nx+1):(np+nx)` parameter values correspond to the `b_i^C` variables used
 to detect a relaxation crossing a upper state bound. The variables are floats but
