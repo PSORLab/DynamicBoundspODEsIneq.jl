@@ -22,7 +22,11 @@ using Sundials
 const DBB = DynamicBoundsBase
 
 import DynamicBoundsBase: relax!, set!, setall!, get, getall!, relax!
-export DifferentialInequality, set!, setall!, get, getall!, relax!
+export DifferentialInequality, set!, setall!, get, getall!, relax!,
+       DifferentialInequalityCond, DifferentialInequalityAffect,
+       DifferentialInequalityAffectNeg, DifferentialInequalityf,
+       LocalProblemStorage
+
 include("local_integration_problem.jl")
 include("contractors.jl")
 include("DifferentialInequality.jl")

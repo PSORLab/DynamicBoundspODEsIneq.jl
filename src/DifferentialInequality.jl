@@ -12,57 +12,68 @@
 #############################################################################
 
 """
-$(TYPEDEF)
+DifferentialInequalityCond <: Function
 
-A functor used to check for an event were a relaxation ODE crosses the an interval bound ODE.
+A functor (`<: Function`) used to check for an event were a relaxation ODE crosses the an interval bound ODE.
+The functor is called using `(d::DifferentialInequalityCond)(g, x, t, integrator)`. The
+`p` field of the `integrator` hold parameter values in components 1, ..., np. Components
+np + 1, ..., 2*np are a flag is indicating a positive crossing. Components
+2*np + 1, ..., 3*np are a flag is indicating a negative crossing.
 """
 struct DifferentialInequalityCond <: Function
     nx::Int
     np::Int
     etol::Float64
 end
-function (d::DifferentialInequalityCond)(g, u::Vector{Float64}, t::Float64, integrator)::Nothing
+
+function (d::DifferentialInequalityCond)(g, x::Vector{Float64}, t::Float64, integrator)::Nothing
     for i = 1:d.nx
-        g[i] = u[2*d.nx + i] - u[i] - integrator.p[d.np + i]*d.etol
-        g[d.nx+i] = u[d.nx + i] - u[3*d.nx + i]  - integrator.p[d.np+d.nx + i]*d.etol
-        integrator.p[d.np + 2*d.nx + i] = u[2*d.nx + i] - u[i]          # positive if cv > lo
-        integrator.p[d.np + 3*d.nx + i] = u[d.nx + i] - u[3*d.nx + i]   # positive if hi > cc
+        g[i] = x[2*d.nx + i] - x[i] - integrator.p[d.np + i]*d.etol
+        g[d.nx + i] = x[d.nx + i] - x[3*d.nx + i]  - integrator.p[d.np + d.nx + i]*d.etol
+        integrator.p[d.np + 2*d.nx + i] = x[2*d.nx + i] - x[i]          # positive if cv > lo
+        integrator.p[d.np + 3*d.nx + i] = x[d.nx + i] - x[3*d.nx + i]   # positive if hi > cc
     end
     return
 end
 
 """
-$(TYPEDEF)
+DifferentialInequalityAffect <: Function
 
-A functor that sets an indicator parameter to zero if a positive event crossing occurs.
+A functor (`<: Function`) that sets an indicator parameter to zero if a positive event crossing occurs.
 """
 struct DifferentialInequalityAffect <: Function
     np::Int
     nx::Int
 end
+
 function (d::DifferentialInequalityAffect)(integrator, idx::Int)::Nothing
-    integrator.p[d.np + idx] = 0.0
+    @inbounds integrator.p[d.np + idx] = 0.0
     return
 end
 
 """
-$(TYPEDEF)
+DifferentialInequalityAffectNeg <: Function
 
-A functor that sets an indicator parameter to zero if a negative event crossing occurs.
+A functor (`<: Function`) that sets an indicator parameter to zero if a negative event crossing occurs.
 """
 struct DifferentialInequalityAffectNeg <: Function
     np::Int
     nx::Int
 end
+
 function (d::DifferentialInequalityAffectNeg)(integrator, idx::Int)::Nothing
-    @inbounds integrator.p[d.np+idx] = 1.0
+    @inbounds integrator.p[d.np + idx] = 1.0
     return
 end
 
 """
-$(TYPEDEF)
+DifferentialInequalityf{Z, F} <: Function
 
-A Functor used to evaluate the r.h.s of the differential inequality.
+A functor (`<: Function`) used to evaluate the r.h.s of the differential inequality. The
+following constructor is used to initialize it:
+`DifferentialInequalityf(f!, Z, nx, np, P, relax, subgrad, polyhedral_constraint, Xapriori)`.
+
+$(TYPEDFIELDS)
 """
 struct DifferentialInequalityf{Z, F} <: Function
     "Right-hand side function"
@@ -103,12 +114,6 @@ struct DifferentialInequalityf{Z, F} <: Function
     Xapriori::Vector{Interval{Float64}}
 end
 
-
-"""
-DifferentialInequalityf(f!, Z, nx, np, P, relax, subgrad, polyhedral_constraint, Xapriori)
-
-A Functor used to evaluate the r.h.s of the differential inequality.
-"""
 function DifferentialInequalityf(f!, Z, nx::Int, np::Int, P, relax::Bool, subgrad::Bool,
                     polyhedral_constraint, Xapriori)
      np = length(P)
@@ -260,11 +265,6 @@ mutable struct DifferentialInequality{F, N, T<:RelaxTag, PRB1<:AbstractODEProble
     polyhedral_constraint::Union{PolyhedralConstraint,Nothing}
 end
 
-"""
-DifferentialInequality(d::ODERelaxProb; kwargs...)
-
-Constructor for DifferentialInequality integrator.
-"""
 function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
                    calculate_subgradient::Bool = true,
                    differentiable::Bool = false,

@@ -13,7 +13,7 @@
 #############################################################################
 
 """
-LocalProblemStorage{PRB, INTR, N}
+LocalProblemStorage
 
 Storage for the pODE problem corresponding to the local solution of the corresponding
 differential equation for the relaxation problem.
