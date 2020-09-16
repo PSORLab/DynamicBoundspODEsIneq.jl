@@ -426,9 +426,7 @@ DBB.get(t::DifferentialInequality, v::DBB.IsSolutionSet) = true
 DBB.get(t::DifferentialInequality, s::DBB.TerminationStatus) = t.integrator_state.termination_status
 
 function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Value)
-    for i in 1:length(t.local_problem_storage.pode_x)
-        out[i,:] .= t.local_problem_storage.pode_x[i]
-    end
+    copyto!(out, t.local_problem_storage.pode_x)
     return
 end
 
