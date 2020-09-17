@@ -183,15 +183,15 @@ end
     DBB.setall!(integrator, DBB.ParameterValue(), val3)
     @test integrator.p[1] == 0.1
 
-    #val01 = -0.3
-    #DBB.set!(integrator, DBB.ParameterBound{Lower}(2), val01)
-    #@test integrator.pL[2] == -0.3
+    val01 = -0.3
+    DBB.set!(integrator, DBB.ParameterBound{Lower}(2), val01)
+    @test integrator.pL[2] == -0.3
 
-    #val02 = 0.5
-    #DBB.set!(integrator, DBB.ParameterBound{Upper}(2), val02)
-    #@test integrator.pU[2] == 0.5
+    val02 = 0.5
+    DBB.set!(integrator, DBB.ParameterBound{Upper}(2), val02)
+    @test integrator.pU[2] == 0.5
 
-    #val03 = 0.2
-    #DBB.set!(integrator, DBB.ParameterValue(2), val03)
-    #@test integrator.p[2] == 0.2
+    val03 = 0.2
+    DBB.set!(integrator, DBB.ParameterValue(2), val03)
+    @test integrator.p[2] == 0.2
 end
