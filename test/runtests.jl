@@ -97,26 +97,6 @@ end
     integrate!(integrator)
 
     t = integrator
-    len0 = length(t.relax_lo)
-    len1 = length(t.relax_hi)
-    len3 = length(t.relax_cv_grad)
-    len4 = length(t.relax_cc_grad)
-    len5 = length(t.local_problem_storage.pode_x)
-    len5a = length(t.local_problem_storage.pode_x[1])
-    len6 = length(t.local_problem_storage.pode_dxdp[1])
-    println("len0 = $len0")
-    println("len1 = $len1")
-    println("len3 = $len3")
-    println("len4 = $len4")
-    println("len5 = $len5, len5a = $(len5a)")
-    println("len6 = $len6")
-
-    #relax_lo = integrator.relax_lo
-    #relax_hi = integrator.relax_hi
-    #relax_cv_grad = integrator.relax_cv_grad
-    #relax_cc_grad = integrator.relax_cc_grad
-    #pode_x = integrator.local_problem_storage.pode_x
-    #pode_dxdp1 = integrator.local_problem_storage.pode_dxdp[1]
 
     vout = zeros(6, size(t.local_problem_storage.pode_x, 2))
     DBB.getall!(vout, integrator, Value())
@@ -128,32 +108,33 @@ end
         push!(out2, zeros(6, size(t.local_problem_storage.pode_x, 2)))
     end
     getall!(out2, integrator, Gradient{Nominal}())
+    @show out2[2][3, 20]
 
-    #=
     out3 = Matrix{Float64}[]
     for i = 1:6
         push!(out3, zeros(6, size(t.local_problem_storage.pode_x, 2)))
     end
-    getall!(out3, integrator, Gradient{Lower}())
+    @test_throws ErrorException getall!(out3, integrator, Gradient{Lower}())
 
     out4 = Matrix{Float64}[]
     for i = 1:6
         push!(out4, zeros(6, size(t.local_problem_storage.pode_x, 2)))
     end
-    getall!(out4, integrator, Gradient{Upper}())
+    @test_throws ErrorException getall!(out4, integrator, Gradient{Upper}())
 
-    out5 = []
-    for i = 1:6
-        push!(out5, zeros(6, size(t.local_problem_storage.pode_x, 2)))
-    end
-    getall!(out5, integrator, Subgradient{Lower}())
+#    out5 = []
+#    for i = 1:6
+#        push!(out5, zeros(6, size(t.local_problem_storage.pode_x, 2)))
+#    end
+#    getall!(out5, integrator, Subgradient{Lower}())
+#    @show out5[2][3, 20]
 
-    out6 = []
-    for i = 1:6
-        push!(out6, zeros(6, size(t.local_problem_storage.pode_x, 2)))
-    end
-    getall!(out6, integrator, Subgradient{Upper}())
-    =#
+#    out6 = []
+#    for i = 1:6
+#        push!(out6, zeros(6, size(t.local_problem_storage.pode_x, 2)))
+#    end
+#    getall!(out6, integrator, Subgradient{Upper}())
+    #@show out6[2][3, 20]
 
     out7 = zeros(6, size(t.relax_lo,2))
     DBB.getall!(out7, integrator, DBB.Bound{Lower}())

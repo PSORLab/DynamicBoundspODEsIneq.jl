@@ -410,10 +410,10 @@ function relax!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) where 
 end
 
 DBB.supports(::DifferentialInequality, ::DBB.IntegratorName) = true
-DBB.supports(::DifferentialInequality, ::DBB.Gradient) = true
-DBB.supports(::DifferentialInequality, ::DBB.Subgradient) = true
-DBB.supports(::DifferentialInequality, ::DBB.Bound) = true
-DBB.supports(::DifferentialInequality, ::DBB.Relaxation) = true
+DBB.supports(::DifferentialInequality, ::DBB.Gradient{T}) where {T <: AbstractBoundLoc} = true
+DBB.supports(::DifferentialInequality, ::DBB.Subgradient{T}) where {T <: AbstractBoundLoc} = true
+DBB.supports(::DifferentialInequality, ::DBB.Bound{T}) where {T <: AbstractBoundLoc} = true
+DBB.supports(::DifferentialInequality, ::DBB.Relaxation{T}) where {T <: AbstractBoundLoc} = true
 DBB.supports(::DifferentialInequality, ::DBB.IsNumeric) = true
 DBB.supports(::DifferentialInequality, ::DBB.IsSolutionSet) = true
 DBB.supports(::DifferentialInequality, ::DBB.TerminationStatus) = true
@@ -433,39 +433,6 @@ end
 function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Gradient{Nominal})
     for i = 1:t.np
         copyto!(out[i], t.local_problem_storage.pode_dxdp[i])
-    end
-    return
-end
-
-function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Gradient{Lower})
-    if ~t.differentiable
-        error("Integrator does not generate differential relaxations. Set the
-               differentiable_flag field to true and reintegrate.")
-    end
-    for i in 1:t.np
-        if !t.calculate_relax
-            fill!(out[i], 0.0)
-        else
-            @inbounds for j in eachindex(out[i])
-                out[i][j] = t.relax_cv_grad[j][i]
-            end
-        end
-    end
-    return
-end
-function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Gradient{Upper})
-    if ~t.differentiable_flag
-        error("Integrator does not generate differential relaxations. Set the
-               differentiable_flag field to true and reintegrate.")
-    end
-    for i in 1:t.np
-        if !t.calculate_relax
-            fill!(out[i], 0.0)
-        else
-            @inbounds for j in eachindex(out[i])
-                out[i][j] = t.relax_cc_grad[j][i]
-            end
-        end
     end
     return
 end
@@ -492,6 +459,23 @@ function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g
             end
         end
     end
+    return
+end
+
+function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Gradient{Lower})
+    if ~t.differentiable
+        error("Integrator does not generate differential relaxations. Create integrator with
+               differentiable field to set to true and reintegrate.")
+    end
+    DBB.getall!(out, t, DBB.Subgradient{Lower}())
+    return
+end
+function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Gradient{Upper})
+    if ~t.differentiable
+        error("Integrator does not generate differential relaxations. Create integrator with
+               differentiable field to set to true and reintegrate.")
+    end
+    DBB.getall!(out, t, DBB.Subgradient{Upper}())
     return
 end
 
