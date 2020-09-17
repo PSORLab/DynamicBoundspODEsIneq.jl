@@ -93,48 +93,48 @@ end
     @test DBB.get(integrator, DBB.IsSolutionSet())
     @test DBB.get(integrator, DBB.TerminationStatus()) === RELAXATION_NOT_CALLED
 
-    relax!(integrator)
-    integrate!(integrator)
+    DBB.relax!(integrator)
+    DBB.integrate!(integrator)
 
     t = integrator
 
     vout = zeros(6, size(t.local_problem_storage.pode_x, 2))
     DBB.getall!(vout, integrator, Value())
-    @show vout[5,end] == 15.388489679114812
-    @show vout[6,end] == 0.6115103208851901
+    @test vout[5,end] == 15.388489679114812
+    @test vout[6,end] == 0.6115103208851901
 
     out2 = Matrix{Float64}[]
     for i = 1:6
         push!(out2, zeros(6, size(t.local_problem_storage.pode_x, 2)))
     end
-    getall!(out2, integrator, Gradient{Nominal}())
-    @show out2[2][3, 20]
+    DBB.getall!(out2, integrator, DBB.Gradient{Nominal}())
+    @test out2[2][3, 20] == -0.00015998255331242103
 
     out3 = Matrix{Float64}[]
     for i = 1:6
         push!(out3, zeros(6, size(t.local_problem_storage.pode_x, 2)))
     end
-    @test_throws ErrorException getall!(out3, integrator, Gradient{Lower}())
+    @test_throws ErrorException DBB.getall!(out3, integrator, DBB.Gradient{Lower}())
 
     out4 = Matrix{Float64}[]
     for i = 1:6
         push!(out4, zeros(6, size(t.local_problem_storage.pode_x, 2)))
     end
-    @test_throws ErrorException getall!(out4, integrator, Gradient{Upper}())
+    @test_throws ErrorException DBB.getall!(out4, integrator, DBB.Gradient{Upper}())
 
-#    out5 = []
-#    for i = 1:6
-#        push!(out5, zeros(6, size(t.local_problem_storage.pode_x, 2)))
-#    end
-#    getall!(out5, integrator, Subgradient{Lower}())
-#    @show out5[2][3, 20]
+    out5 = Matrix{Float64}[]
+    for i = 1:6
+        push!(out5, zeros(6, size(t.local_problem_storage.pode_x, 2)))
+    end
+    DBB.getall!(out5, integrator, Subgradient{Lower}())
+    @test out5[2][3, 20] == -0.0009550904931136906
 
-#    out6 = []
-#    for i = 1:6
-#        push!(out6, zeros(6, size(t.local_problem_storage.pode_x, 2)))
-#    end
-#    getall!(out6, integrator, Subgradient{Upper}())
-    #@show out6[2][3, 20]
+    out6 = Matrix{Float64}[]
+    for i = 1:6
+        push!(out6, zeros(6, size(t.local_problem_storage.pode_x, 2)))
+    end
+    DBB.getall!(out6, integrator, DBB.Subgradient{Upper}())
+    @test out6[2][3, 20] == -7.440794834434013e-5
 
     out7 = zeros(6, size(t.relax_lo,2))
     DBB.getall!(out7, integrator, DBB.Bound{Lower}())

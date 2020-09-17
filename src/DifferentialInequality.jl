@@ -430,13 +430,6 @@ function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Va
     return
 end
 
-function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Gradient{Nominal})
-    for i = 1:t.np
-        copyto!(out[i], t.local_problem_storage.pode_dxdp[i])
-    end
-    return
-end
-
 function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Subgradient{Lower})
     for i in 1:t.np
         if !t.calculate_relax
@@ -458,6 +451,13 @@ function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g
                 out[i][j] = t.relax_cc_grad[j][i]
             end
         end
+    end
+    return
+end
+
+function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Gradient{Nominal})
+    for i = 1:t.np
+        copyto!(out[i], t.local_problem_storage.pode_dxdp[i])
     end
     return
 end
