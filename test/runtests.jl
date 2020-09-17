@@ -163,43 +163,25 @@ end
     DBB.getall!(out8, integrator, DBB.Bound{Upper}())
     @test out8[6, 77]== 8.089220917692634
 
-    out9 = zeros(6, size(t.relax_lo,2))
-    DBB.getall!(out9, integrator, DBB.Bound{Lower}())
-    @test out9[6, 77] == 0.01699582373787887
-
-    out10 = zeros(6, size(t.relax_lo,2))
-    DBB.getall!(out10, integrator, DBB.Bound{Upper}())
-    @test out10[6, 77] == 8.089220917692634
-
-    #=
     out11 = zeros(6, size(t.relax_lo,2))
     DBB.getall!(out11, integrator, DBB.Relaxation{Lower}())
-    @test out11[6, 77] == 1.0
+    @test out11[6, 77] == 0.01699582373787887
 
     out12 = zeros(6, size(t.relax_lo,2))
     DBB.getall!(out12, integrator, DBB.Relaxation{Upper}())
-    @test out12[6, 77] == 1.0
+    @test out12[6, 77] == 4.153947135290472
 
-    out11a = zeros(6, size(t.relax_lo,2))
-    DBB.getall!(out11a, integrator, DBB.Relaxation{Lower}())
-    @test out11a[6, 77] == 1.0
+    val1 = zeros(6) .- 0.1
+    DBB.setall!(integrator, DBB.ParameterBound{Lower}(), val1)
+    @test integrator.pL[1] == -0.1
 
-    out12a = zeros(6, size(t.relax_lo,2))
-    DBB.getall!(out12a, integrator, DBB.Relaxation{Upper}())
-    @test out12a[6, 77] == 1.0
-    =#
+    val2 = zeros(6) .+ 0.2
+    DBB.setall!(integrator, DBB.ParameterBound{Upper}(), val2)
+    @test integrator.pU[1] == 0.2
 
-    #val1 = zeros(6) .- 0.1
-    #DBB.setall!(integrator, DBB.ParameterBound{Lower}(), val1)
-    #@test integrator.pL[1] == -0.1
-
-    #val2 = zeros(6) .+ 0.2
-    #DBB.setall!(integrator, DBB.ParameterBound{Upper}(), val2)
-    #@test integrator.pU[1] == 0.2
-
-    #val3 = zeros(6) .+ 0.1
-    #DBB.setall!(integrator, DBB.ParameterValue(), val3)
-    #@test integrator.p[1] == 0.1
+    val3 = zeros(6) .+ 0.1
+    DBB.setall!(integrator, DBB.ParameterValue(), val3)
+    @test integrator.p[1] == 0.1
 
     #val01 = -0.3
     #DBB.set!(integrator, DBB.ParameterBound{Lower}(2), val01)
