@@ -431,10 +431,8 @@ function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Va
 end
 
 function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Gradient{Nominal})
-    for i in 1:t.np
-        @inbounds for j in eachindex(out[i])
-            out[i][j] = t.local_problem_storage.pode_dxdp[i][j]
-        end
+    for i = 1:t.np
+        copyto!(out[i], t.local_problem_storage.pode_dxdp[i])
     end
     return
 end
@@ -445,7 +443,7 @@ function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g
                differentiable_flag field to true and reintegrate.")
     end
     for i in 1:t.np
-        if t.evaluate_interval
+        if !t.calculate_relax
             fill!(out[i], 0.0)
         else
             @inbounds for j in eachindex(out[i])
@@ -461,7 +459,7 @@ function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g
                differentiable_flag field to true and reintegrate.")
     end
     for i in 1:t.np
-        if t.evaluate_interval
+        if !t.calculate_relax
             fill!(out[i], 0.0)
         else
             @inbounds for j in eachindex(out[i])
@@ -474,7 +472,7 @@ end
 
 function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Subgradient{Lower})
     for i in 1:t.np
-        if t.evaluate_interval
+        if !t.calculate_relax
             fill!(out[i], 0.0)
         else
             @inbounds for j in eachindex(out[i])
@@ -486,7 +484,7 @@ function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g
 end
 function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Subgradient{Upper})
     for i in 1:t.np
-        if t.evaluate_interval
+        if !t.calculate_relax
             fill!(out[i], 0.0)
         else
             @inbounds for j in eachindex(out[i])
@@ -518,50 +516,50 @@ function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Bou
 end
 
 function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Relaxation{Lower})
-    if t.evaluate_interval
+    if !t.calculate_relax
         @inbounds for i in eachindex(out)
             out[i] = t.relax_lo[i]
         end
     else
         @inbounds for i in eachindex(out)
-            out[i] = t.state_relax[i].cv
+            out[i] = t.relax_cv[i]
         end
     end
     return
 end
 function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Relaxation{Lower})
-    if t.evaluate_interval
+    if !t.calculate_relax
         @inbounds for i in eachindex(out)
             out[i] = t.X[i].lo
         end
     else
         @inbounds for i in eachindex(out)
-            out[i] = t.state_relax[i].cv
+            out[i] = t.relax_cv[i]
         end
     end
     return
 end
 
 function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Relaxation{Upper})
-    if t.evaluate_interval
+    if !t.calculate_relax
         @inbounds for i in eachindex(out)
             out[i] = t.X[i].hi
         end
     else
         @inbounds for i in eachindex(out)
-            out[i] = t.state_relax[i].cc
+            out[i] = t.relax_cc[i]
         end
     end
     return
 end
 function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Relaxation{Upper})
-    if t.evaluate_interval
+    if !t.calculate_relax
         @inbounds for i in eachindex(out)
             out[i] = t.X[i].hi
         end
     else
         @inbounds for i in eachindex(out)
-            out[i] = t.state_relax[i].cc
+            out[i] = t.relax_cc[i]
         end
     end
     return

@@ -93,7 +93,7 @@ end
     @test DBB.get(integrator, DBB.IsSolutionSet())
     @test DBB.get(integrator, DBB.TerminationStatus()) === RELAXATION_NOT_CALLED
 
-    #relax!(integrator)
+    relax!(integrator)
     integrate!(integrator)
 
     t = integrator
@@ -123,46 +123,71 @@ end
     @show vout[5,end] == 15.388489679114812
     @show vout[6,end] == 0.6115103208851901
 
-    #=
-    out2 = []
+    out2 = Matrix{Float64}[]
+    for i = 1:6
+        push!(out2, zeros(6, size(t.local_problem_storage.pode_x, 2)))
+    end
     getall!(out2, integrator, Gradient{Nominal}())
 
-    out3 = []
+    #=
+    out3 = Matrix{Float64}[]
+    for i = 1:6
+        push!(out3, zeros(6, size(t.local_problem_storage.pode_x, 2)))
+    end
     getall!(out3, integrator, Gradient{Lower}())
 
-    out4 = []
+    out4 = Matrix{Float64}[]
+    for i = 1:6
+        push!(out4, zeros(6, size(t.local_problem_storage.pode_x, 2)))
+    end
     getall!(out4, integrator, Gradient{Upper}())
 
     out5 = []
+    for i = 1:6
+        push!(out5, zeros(6, size(t.local_problem_storage.pode_x, 2)))
+    end
     getall!(out5, integrator, Subgradient{Lower}())
 
     out6 = []
+    for i = 1:6
+        push!(out6, zeros(6, size(t.local_problem_storage.pode_x, 2)))
+    end
     getall!(out6, integrator, Subgradient{Upper}())
     =#
 
-    #out7 = zeros(length(t.relax_lo),6)
-    #DBB.getall!(out7, integrator, DBB.Bound{Lower}())
-    #@test out7[20,3] == 1.0
+    out7 = zeros(6, size(t.relax_lo,2))
+    DBB.getall!(out7, integrator, DBB.Bound{Lower}())
+    @test out7[6, 77] == 0.01699582373787887
 
-    #out8 = zeros(length(t.relax_lo),6)
-    #DBB.getall!(out8, integrator, DBB.Bound{Upper}())
-    #@test out8[20,3] == 1.0
+    out8 = zeros(6, size(t.relax_lo,2))
+    DBB.getall!(out8, integrator, DBB.Bound{Upper}())
+    @test out8[6, 77]== 8.089220917692634
 
-    #out9 = zeros(length(t.relax_lo),6)
-    #DBB.getall!(out9, integrator, DBB.Bound{Lower}())
-    #@test out9[20,3] == 1.0
+    out9 = zeros(6, size(t.relax_lo,2))
+    DBB.getall!(out9, integrator, DBB.Bound{Lower}())
+    @test out9[6, 77] == 0.01699582373787887
 
-    #out10 = zeros(length(t.relax_lo),6)
-    #DBB.getall!(out10, integrator, DBB.Bound{Upper}())
-    #@test out10[20,3] == 1.0
+    out10 = zeros(6, size(t.relax_lo,2))
+    DBB.getall!(out10, integrator, DBB.Bound{Upper}())
+    @test out10[6, 77] == 8.089220917692634
 
-    #out11 = zeros(length(t.relax_lo),6)
-    #DBB.getall!(out11, integrator, DBB.Relaxation{Lower}())
-    #@test out11[20,3] == 1.0
+    #=
+    out11 = zeros(6, size(t.relax_lo,2))
+    DBB.getall!(out11, integrator, DBB.Relaxation{Lower}())
+    @test out11[6, 77] == 1.0
 
-    #out12 = zeros(length(t.relax_lo),6)
-    #DBB.getall!(out12, integrator, DBB.Relaxation{Upper}())
-    #@test out12[20,3] == 1.0
+    out12 = zeros(6, size(t.relax_lo,2))
+    DBB.getall!(out12, integrator, DBB.Relaxation{Upper}())
+    @test out12[6, 77] == 1.0
+
+    out11a = zeros(6, size(t.relax_lo,2))
+    DBB.getall!(out11a, integrator, DBB.Relaxation{Lower}())
+    @test out11a[6, 77] == 1.0
+
+    out12a = zeros(6, size(t.relax_lo,2))
+    DBB.getall!(out12a, integrator, DBB.Relaxation{Upper}())
+    @test out12a[6, 77] == 1.0
+    =#
 
     #val1 = zeros(6) .- 0.1
     #DBB.setall!(integrator, DBB.ParameterBound{Lower}(), val1)
