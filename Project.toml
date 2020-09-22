@@ -1,7 +1,7 @@
 name = "DynamicBoundspODEsIneq"
 uuid = "8922cf73-a24a-4c59-b2b7-455e840875f0"
 authors = ["Matthew Wilhelm <matthew.wilhelm@uconn.edu>"]
-version = "0.3.0"
+version = "0.4.0"
 
 [deps]
 DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
