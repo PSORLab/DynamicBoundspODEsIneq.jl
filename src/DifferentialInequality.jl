@@ -515,18 +515,21 @@ function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Re
     end
     return
 end
+
+#=
 function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Relaxation{Lower})
     if !t.calculate_relax
         @inbounds for i in eachindex(out)
             out[i] = t.X[1,i].lo
         end
     else
-        @inbounds for i in eachindex(out)
+        for i in eachindex(out)
             out[i] = t.relax_cv[1,i]
         end
     end
     return
 end
+=#
 
 function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Relaxation{Upper})
     if !t.calculate_relax
@@ -540,18 +543,21 @@ function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Re
     end
     return
 end
+
+#=
 function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Relaxation{Upper})
     if !t.calculate_relax
         @inbounds for i in eachindex(out)
             out[i] = t.X[1,i].hi
         end
     else
-        @inbounds for i in eachindex(out)
+        for i in eachindex(out)
             out[i] = t.relax_cc[1,i]
         end
     end
     return
 end
+=#
 
 function DBB.setall!(t::DifferentialInequality, v::DBB.ParameterBound{Lower}, value::Vector{Float64})
     t.integrator_state.new_decision_box = true
