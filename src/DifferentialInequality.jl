@@ -579,13 +579,13 @@ end
 
 function DBB.set!(t::DifferentialInequality, v::DBB.ParameterBound{Lower}, value::T) where T <: Union{Integer, AbstractFloat}
     t.integrator_state.new_decision_box = true
-    @inbounds t.pL[v.i] = value[v.i]
+    @inbounds t.pL[v.i] = value
     return
 end
 
 function DBB.set!(t::DifferentialInequality, v::DBB.ParameterBound{Upper}, value::T) where T <: Union{Integer, AbstractFloat}
     t.integrator_state.new_decision_box = true
-    @inbounds t.pU[v.i] = value[v.i]
+    @inbounds t.pU[v.i] = value
     return
 end
 
