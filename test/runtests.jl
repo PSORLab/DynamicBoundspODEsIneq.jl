@@ -191,7 +191,4 @@ end
     out16 = zeros(size(t.relax_lo,2))
     DBB.getall!(out16, integrator, DBB.Bound{Upper}())
     @test isapprox(out16[12], 33.95462900665603, atol = 1E-8)
-
-    # gradinet and subgradient
-
 end
