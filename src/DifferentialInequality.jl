@@ -485,7 +485,9 @@ function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Bo
 end
 
 function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Bound{Lower})
-    out[:] = t.relax_lo[1,:]
+    @inbounds for i in eachindex(out)
+        out[i] = t.relax_lo[1,i]
+    end
     return
 end
 
@@ -495,7 +497,9 @@ function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Bo
 end
 
 function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Bound{Upper})
-    out[:] = t.relax_hi[1,:]
+    @inbounds for i in eachindex(out)
+        out[i] = t.relax_hi[1,i]
+    end
     return
 end
 
@@ -514,11 +518,11 @@ end
 function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Relaxation{Lower})
     if !t.calculate_relax
         @inbounds for i in eachindex(out)
-            out[i] = t.X[i].lo
+            out[i] = t.X[1,i].lo
         end
     else
         @inbounds for i in eachindex(out)
-            out[i] = t.relax_cv[i]
+            out[i] = t.relax_cv[1,i]
         end
     end
     return
@@ -539,11 +543,11 @@ end
 function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Relaxation{Upper})
     if !t.calculate_relax
         @inbounds for i in eachindex(out)
-            out[i] = t.X[i].hi
+            out[i] = t.X[1,i].hi
         end
     else
         @inbounds for i in eachindex(out)
-            out[i] = t.relax_cc[i]
+            out[i] = t.relax_cc[1,i]
         end
     end
     return
