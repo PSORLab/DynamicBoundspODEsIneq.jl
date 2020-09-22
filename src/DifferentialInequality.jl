@@ -591,46 +591,11 @@ function DBB.set!(t::DifferentialInequality, v::DBB.ParameterValue, value::T) wh
     return
 end
 
-function DBB.setall!(t::DifferentialInequality, v::DBB.Bound{Lower}, values::Array{Float64,2})
+function DBB.setall!(t::DifferentialInequality, v::DBB.ConstantStateBounds)
     if t.integrator_state.new_decision_box
         t.integrator_state.set_lower_state = true
-    end
-    for i in 1:t.nx
-        @inbounds for j in 1:t.steps
-            t.xL[i,j] = values[i,j]
-        end
-    end
-    return
-end
-
-function DBB.setall!(t::DifferentialInequality, v::DBB.Bound{Lower}, values::Vector{Float64})
-    if t.integrator_state.new_decision_box
-        t.integrator_state.set_lower_state = true
-    end
-    @inbounds for i in 1:t.steps
-        t.xL[1,i] = values[i]
-    end
-    return
-end
-
-function DBB.setall!(t::DifferentialInequality, v::DBB.Bound{Upper}, values::Array{Float64,2})
-    if t.integrator_state.new_decision_box
         t.integrator_state.set_upper_state = true
     end
-    for i in 1:t.nx
-        @inbounds for j in 1:t.steps
-            t.xU[i,j] = values[i,j]
-        end
-    end
-    return
-end
-
-function DBB.setall!(t::DifferentialInequality, v::DBB.Bound{Upper}, values::Vector{Float64})
-    if t.integrator_state.new_decision_box
-        t.integrator_state.set_upper_state = true
-    end
-    @inbounds for i in 1:t.steps
-        t.xU[1,i] = values[i]
-    end
+    relax_ode_prob.f!.Xapriori = Interval.(v.xL, v.xU)
     return
 end

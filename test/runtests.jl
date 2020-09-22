@@ -175,4 +175,15 @@ end
     val03 = 0.2
     DBB.set!(integrator, DBB.ParameterValue(2), val03)
     @test integrator.p[2] == 0.2
+
+    #=
+    getall!(#VECTOR, integrator, DBB.Relaxation{Lower}())
+
+    getall!(#VECTOR, integrator, DBB.Relaxation{Upper}())
+
+    getall!(#VECTOR, integrator, DBB.Bound{Lower}())
+
+    getall!(#VECTOR, integrator, DBB.Bound{Upper}())
+    =#
+
 end
