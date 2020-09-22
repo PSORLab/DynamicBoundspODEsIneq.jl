@@ -597,7 +597,7 @@ end
 
 function DBB.set!(t::DifferentialInequality, v::DBB.ParameterValue, value::T) where T <: Union{Integer, AbstractFloat}
     t.integrator_state.new_decision_pnt = true
-    @inbounds t.p[v.i] = value[v.i]
+    @inbounds t.p[v.i] = value
     return
 end
 
