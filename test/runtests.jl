@@ -98,6 +98,9 @@ end
 
     t = integrator
 
+    #support_set = DBB.get(integrator, DBB.SupportSet())
+    #@test support_set[3]
+
     vout = zeros(6, size(t.local_problem_storage.pode_x, 2))
     DBB.getall!(vout, integrator, Value())
     @test isapprox(vout[5,end], 15.388489679114812, atol = 1E-8)

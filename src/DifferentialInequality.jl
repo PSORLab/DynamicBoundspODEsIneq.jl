@@ -419,11 +419,13 @@ DBB.supports(::DifferentialInequality, ::DBB.IsSolutionSet) = true
 DBB.supports(::DifferentialInequality, ::DBB.TerminationStatus) = true
 DBB.supports(::DifferentialInequality, ::DBB.Value) = true
 DBB.supports(::DifferentialInequality, ::DBB.ParameterValue) = true
+DBB.supports(::DifferentialInequality, ::DBB.SupportSet) = true
 
 DBB.get(t::DifferentialInequality, v::DBB.IntegratorName) = "DifferentialInequality Integrator"
 DBB.get(t::DifferentialInequality, v::DBB.IsNumeric) = false
 DBB.get(t::DifferentialInequality, v::DBB.IsSolutionSet) = true
-DBB.get(t::DifferentialInequality, s::DBB.TerminationStatus) = t.integrator_state.termination_status
+DBB.get(t::DifferentialInequality, v::DBB.TerminationStatus) = t.integrator_state.termination_status
+DBB.get(t::DifferentialInequality, v::DBB.SupportSet) =  DBB.SupportSet(t.time)
 
 function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Value)
     copyto!(out, t.local_problem_storage.pode_x)
@@ -516,7 +518,6 @@ function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Re
     return
 end
 
-#=
 function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Relaxation{Lower})
     if !t.calculate_relax
         @inbounds for i in eachindex(out)
@@ -529,7 +530,6 @@ function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Rel
     end
     return
 end
-=#
 
 function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Relaxation{Upper})
     if !t.calculate_relax
@@ -544,7 +544,6 @@ function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Re
     return
 end
 
-#=
 function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Relaxation{Upper})
     if !t.calculate_relax
         @inbounds for i in eachindex(out)
@@ -557,7 +556,6 @@ function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Rel
     end
     return
 end
-=#
 
 function DBB.setall!(t::DifferentialInequality, v::DBB.ParameterBound{Lower}, value::Vector{Float64})
     t.integrator_state.new_decision_box = true
