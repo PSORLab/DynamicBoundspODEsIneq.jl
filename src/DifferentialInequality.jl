@@ -425,7 +425,7 @@ DBB.get(t::DifferentialInequality, v::DBB.IntegratorName) = "DifferentialInequal
 DBB.get(t::DifferentialInequality, v::DBB.IsNumeric) = false
 DBB.get(t::DifferentialInequality, v::DBB.IsSolutionSet) = true
 DBB.get(t::DifferentialInequality, v::DBB.TerminationStatus) = t.integrator_state.termination_status
-DBB.get(t::DifferentialInequality, v::DBB.SupportSet) =  DBB.SupportSet(t.time)
+DBB.get(t::DifferentialInequality, v::DBB.SupportSet) =  DBB.SupportSet(t.relax_t)
 
 function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Value)
     copyto!(out, t.local_problem_storage.pode_x)

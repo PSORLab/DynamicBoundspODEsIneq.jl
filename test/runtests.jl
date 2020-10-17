@@ -98,8 +98,8 @@ end
 
     t = integrator
 
-    #support_set = DBB.get(integrator, DBB.SupportSet())
-    #@test support_set[3]
+    support_set = DBB.get(integrator, DBB.SupportSet())
+    @test support_set[2] == 0.02
 
     vout = zeros(6, size(t.local_problem_storage.pode_x, 2))
     DBB.getall!(vout, integrator, Value())
@@ -178,14 +178,6 @@ end
     val03 = 0.2
     DBB.set!(integrator, DBB.ParameterValue(2), val03)
     @test integrator.p[2] == 0.2
-
-    #out13 = zeros(size(t.relax_cv,2))
-    #DBB.getall!(out13, integrator, DBB.Relaxation{Lower}())
-    #@test isapprox(out13[12], 33.75044934920534, atol = 1E-8)
-
-    #out14 = zeros(size(t.relax_cc,2))
-    #DBB.getall!(out14, integrator, DBB.Relaxation{Upper}())
-    #@test isapprox(out14[12], 33.75384294104528, atol = 1E-8)
 
     out15 = zeros(size(t.relax_lo,2))
     DBB.getall!(out15, integrator, DBB.Bound{Lower}())
