@@ -25,7 +25,7 @@ mutable struct LocalProblemStorage{PRB, INTR, N}
     x0local::Vector{Float64}
     pduals::Vector{Dual{Nothing,Float64,N}}
     x0duals::Vector{Dual{Nothing,Float64,N}}
-    integator::INTR
+    integrator::INTR
     user_t::Vector{Float64}
     integrator_t::Vector{Float64}
     abstol::Float64

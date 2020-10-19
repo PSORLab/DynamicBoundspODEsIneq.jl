@@ -17,9 +17,9 @@ function integrate!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) wh
 
     d.local_problem_storage.pduals .= seed_duals(view(d.p, 1:N))
     d.local_problem_storage.x0duals .= d.x0f(d.local_problem_storage.pduals)
-    for i in 1:N
+    for i = 1:N
         d.local_problem_storage.x0local[i] = d.local_problem_storage.x0duals[i].value
-        for j in 1:d.nx
+        for j = 1:d.nx
             d.local_problem_storage.x0local[(j + N + (i-1)*d.nx)] = d.local_problem_storage.x0duals[i].partials[j]
         end
     end
@@ -28,11 +28,11 @@ function integrate!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) wh
                                                   p = d.p[1:d.np])
 
     if ~isempty(d.local_problem_storage.user_t)
-        solution = solve(d.local_problem_storage.pode_problem, d.local_problem_storage.integator,
+        solution = solve(d.local_problem_storage.pode_problem, d.local_problem_storage.integrator,
                      tstops = d.local_problem_storage.user_t, abstol = d.local_problem_storage.abstol,
                      adaptive = false, reltol=d.local_problem_storage.reltol)
     else
-        solution = solve(d.local_problem_storage.pode_problem, d.local_problem_storage.integator,
+        solution = solve(d.local_problem_storage.pode_problem, d.local_problem_storage.integrator,
                          abstol = d.local_problem_storage.abstol, reltol=d.local_problem_storage.reltol)
     end
 
@@ -42,7 +42,7 @@ function integrate!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) wh
     resize!(d.local_problem_storage.integrator_t, new_length)
     d.local_problem_storage.integrator_t .= solution.t
     d.local_problem_storage.pode_x .= x
-    for i in 1:N
+    for i = 1:N
         resize!(d.local_problem_storage.pode_dxdp[i], d.nx, new_length)
         d.local_problem_storage.pode_dxdp[i] .= dxdp[i]
     end
