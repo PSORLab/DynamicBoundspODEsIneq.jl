@@ -99,7 +99,7 @@ end
     t = integrator
 
     support_set = DBB.get(integrator, DBB.SupportSet())
-    @test support_set[2] == 0.02
+    @test isapprox(support_set.s[2], 1.411753923977542e-11)
 
     vout = zeros(6, size(t.local_problem_storage.pode_x, 2))
     DBB.getall!(vout, integrator, Value())
