@@ -428,17 +428,18 @@ DBB.supports(::DifferentialInequality, ::DBB.ParameterBound{Lower}) = true
 DBB.supports(::DifferentialInequality, ::DBB.ParameterBound{Upper}) = true
 DBB.supports(::DifferentialInequality, ::DBB.ParameterValue) = true
 DBB.supports(::DifferentialInequality, ::DBB.SupportSet) = true
-DBB.supports(::DifferentialInequality, ::DBB.ParameterNumber) = t.np
-DBB.supports(::DifferentialInequality, ::DBB.StateNumber) = t.nx
+DBB.supports(::DifferentialInequality, ::DBB.ParameterNumber) = true
+DBB.supports(::DifferentialInequality, ::DBB.StateNumber) = true
+DBB.supports(::DifferentialInequality, ::DBB.SupportNumber) = true
 
 DBB.get(t::DifferentialInequality, v::DBB.IntegratorName) = "DifferentialInequality Integrator"
 DBB.get(t::DifferentialInequality, v::DBB.IsNumeric) = false
 DBB.get(t::DifferentialInequality, v::DBB.IsSolutionSet) = true
 DBB.get(t::DifferentialInequality, v::DBB.TerminationStatus) = t.integrator_state.termination_status
-DBB.get(t::DifferentialInequality, v::DBB.SupportSet) =  DBB.SupportSet(t.relax_t)
+DBB.get(t::DifferentialInequality, v::DBB.SupportSet) =  DBB.SupportSet(t.local_problem_storage.user_t)
 DBB.get(t::DifferentialInequality, v::DBB.ParameterNumber) = t.np
 DBB.get(t::DifferentialInequality, v::DBB.StateNumber) = t.nx
-
+DBB.get(t::DifferentialInequality, v::DBB.SupportNumber) = length(t.local_problem_storage.user_t)
 
 function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Value)
     copyto!(out, t.local_problem_storage.pode_x)
@@ -446,7 +447,7 @@ function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Va
 end
 
 function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Subgradient{Lower})
-    for i in 1:t.np
+    for i = 1:t.np
         if !t.calculate_relax
             fill!(out[i], 0.0)
         else
@@ -458,7 +459,7 @@ function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g
     return
 end
 function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Subgradient{Upper})
-    for i in 1:t.np
+    for i = 1:t.np
         if !t.calculate_relax
             fill!(out[i], 0.0)
         else
@@ -572,7 +573,7 @@ end
 
 function DBB.setall!(t::DifferentialInequality, v::DBB.ParameterBound{Lower}, value::Vector{Float64})
     t.integrator_state.new_decision_box = true
-    @inbounds for i in 1:t.np
+    @inbounds for i = 1:t.np
         t.pL[i] = value[i]
     end
     return
@@ -580,7 +581,7 @@ end
 
 function DBB.setall!(t::DifferentialInequality, v::DBB.ParameterBound{Upper}, value::Vector{Float64})
     t.integrator_state.new_decision_box = true
-    @inbounds for i in 1:t.np
+    @inbounds for i = 1:t.np
         t.pU[i] = value[i]
     end
     return
@@ -588,7 +589,7 @@ end
 
 function DBB.setall!(t::DifferentialInequality, v::DBB.ParameterValue, value::Vector{Float64})
     t.integrator_state.new_decision_pnt = true
-    @inbounds for i in 1:t.np
+    @inbounds for i = 1:t.np
         t.p[i] = value[i]
     end
     return
