@@ -416,12 +416,16 @@ end
 DBB.supports(::DifferentialInequality, ::DBB.IntegratorName) = true
 DBB.supports(::DifferentialInequality, ::DBB.Gradient{T}) where {T <: AbstractBoundLoc} = true
 DBB.supports(::DifferentialInequality, ::DBB.Subgradient{T}) where {T <: AbstractBoundLoc} = true
-DBB.supports(::DifferentialInequality, ::DBB.Bound{T}) where {T <: AbstractBoundLoc} = true
-DBB.supports(::DifferentialInequality, ::DBB.Relaxation{T}) where {T <: AbstractBoundLoc} = true
+DBB.supports(::DifferentialInequality, ::DBB.Bound{Lower}) = true
+DBB.supports(::DifferentialInequality, ::DBB.Bound{Upper}) = true
+DBB.supports(::DifferentialInequality, ::DBB.Relaxation{Lower}) = true
+DBB.supports(::DifferentialInequality, ::DBB.Relaxation{Upper}) = true
 DBB.supports(::DifferentialInequality, ::DBB.IsNumeric) = true
 DBB.supports(::DifferentialInequality, ::DBB.IsSolutionSet) = true
 DBB.supports(::DifferentialInequality, ::DBB.TerminationStatus) = true
 DBB.supports(::DifferentialInequality, ::DBB.Value) = true
+DBB.supports(::DifferentialInequality, ::DBB.ParameterBound{Lower}) = true
+DBB.supports(::DifferentialInequality, ::DBB.ParameterBound{Upper}) = true
 DBB.supports(::DifferentialInequality, ::DBB.ParameterValue) = true
 DBB.supports(::DifferentialInequality, ::DBB.SupportSet) = true
 DBB.supports(::DifferentialInequality, ::DBB.ParameterNumber) = t.np
@@ -601,6 +605,9 @@ function DBB.set!(t::DifferentialInequality, v::DBB.ParameterBound{Upper}, value
     @inbounds t.pU[v.i] = value
     return
 end
+
+DBB.getall(t::DifferentialInequality, v::DBB.ParameterBound{Lower}) = t.pL
+DBB.getall(t::DifferentialInequality, v::DBB.ParameterBound{Upper}) = t.pU
 
 function DBB.set!(t::DifferentialInequality, v::DBB.ParameterValue, value::T) where T <: Union{Integer, AbstractFloat}
     t.integrator_state.new_decision_pnt = true
