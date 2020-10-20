@@ -114,10 +114,14 @@ struct DifferentialInequalityf{Z, F} <: Function
     Xapriori::Vector{Interval{Float64}}
 end
 
+size(x::PolyhedralConstraint) = size(x.A)
+size(x::Nothing) = 0,0
+
 function DifferentialInequalityf(f!, Z, nx::Int, np::Int, P, relax::Bool, subgrad::Bool,
                     polyhedral_constraint, Xapriori)
      np = length(P)
-     DifferentialInequalityf{Z,typeof(f!)}(f!, nx, size(polyhedral_constraint.A, 1), np, zeros(Z, np), P,
+     s1, s2 = size(polyhedral_constraint)
+     DifferentialInequalityf{Z,typeof(f!)}(f!, nx, s1, np, zeros(Z, np), P,
                               zeros(Interval{Float64}, nx), zeros(Z, nx), zeros(Z, nx),
                               zeros(Interval{Float64}, nx), zeros(Interval{Float64}, nx),
                               zeros(Interval{Float64}, nx), zeros(Interval{Float64}, nx),
@@ -420,12 +424,17 @@ DBB.supports(::DifferentialInequality, ::DBB.TerminationStatus) = true
 DBB.supports(::DifferentialInequality, ::DBB.Value) = true
 DBB.supports(::DifferentialInequality, ::DBB.ParameterValue) = true
 DBB.supports(::DifferentialInequality, ::DBB.SupportSet) = true
+DBB.supports(::DifferentialInequality, ::DBB.ParameterNumber) = t.np
+DBB.supports(::DifferentialInequality, ::DBB.StateNumber) = t.nx
 
 DBB.get(t::DifferentialInequality, v::DBB.IntegratorName) = "DifferentialInequality Integrator"
 DBB.get(t::DifferentialInequality, v::DBB.IsNumeric) = false
 DBB.get(t::DifferentialInequality, v::DBB.IsSolutionSet) = true
 DBB.get(t::DifferentialInequality, v::DBB.TerminationStatus) = t.integrator_state.termination_status
 DBB.get(t::DifferentialInequality, v::DBB.SupportSet) =  DBB.SupportSet(t.relax_t)
+DBB.get(t::DifferentialInequality, v::DBB.ParameterNumber) = t.np
+DBB.get(t::DifferentialInequality, v::DBB.StateNumber) = t.nx
+
 
 function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Value)
     copyto!(out, t.local_problem_storage.pode_x)

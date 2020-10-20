@@ -27,6 +27,8 @@ export DifferentialInequality, set!, setall!, get, getall!, relax!,
        DifferentialInequalityAffectNeg, DifferentialInequalityf,
        LocalProblemStorage
 
+import Base.size
+
 include("local_integration_problem.jl")
 include("contractors.jl")
 include("DifferentialInequality.jl")
