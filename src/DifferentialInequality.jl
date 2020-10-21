@@ -446,12 +446,16 @@ function relax!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) where 
 end
 
 DBB.supports(::DifferentialInequality, ::DBB.IntegratorName) = true
-DBB.supports(::DifferentialInequality, ::DBB.Gradient{T}) where {T <: AbstractBoundLoc} = true
-DBB.supports(::DifferentialInequality, ::DBB.Subgradient{T}) where {T <: AbstractBoundLoc} = true
+function DBB.supports(t::DifferentialInequality, ::DBB.Gradient{T}) where {T <: AbstractBoundLoc}
+    t.calculate_subgradient
+end
+function DBB.supports(t::DifferentialInequality, ::DBB.Subgradient{T}) where {T <: AbstractBoundLoc}
+    t.calculate_subgradient
+end
 DBB.supports(::DifferentialInequality, ::DBB.Bound{Lower}) = true
 DBB.supports(::DifferentialInequality, ::DBB.Bound{Upper}) = true
-DBB.supports(::DifferentialInequality, ::DBB.Relaxation{Lower}) = true
-DBB.supports(::DifferentialInequality, ::DBB.Relaxation{Upper}) = true
+DBB.supports(t::DifferentialInequality, ::DBB.Relaxation{Lower}) = t.calculate_relax
+DBB.supports(t::DifferentialInequality, ::DBB.Relaxation{Upper}) = t.calculate_relax
 DBB.supports(::DifferentialInequality, ::DBB.IsNumeric) = true
 DBB.supports(::DifferentialInequality, ::DBB.IsSolutionSet) = true
 DBB.supports(::DifferentialInequality, ::DBB.TerminationStatus) = true
