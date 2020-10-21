@@ -268,6 +268,8 @@ mutable struct DifferentialInequality{F, N, T<:RelaxTag, PRB1<:AbstractODEProble
     local_problem_storage::LocalProblemStorage{PRB2, INT1, N}
     np::Int
     nx::Int
+    relax_t_dict_flt::Dict{Float64,Int64}
+    relax_t_dict_indx::Dict{Int64,Int64}
     polyhedral_constraint::Union{PolyhedralConstraint,Nothing}
 end
 
@@ -276,8 +278,7 @@ function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
                    differentiable::Bool = false,
                    event_soft_tol = 1E-4,
                    relax_ode_integrator = CVODE_Adams(),
-                   local_ode_integrator = CVODE_Adams(),
-                   user_t = Float64[])
+                   local_ode_integrator = CVODE_Adams())
 
     @assert ~calculate_subgradient || calculate_relax "Relaxations must be computed in order to compute subgradients"
 
@@ -316,6 +317,7 @@ function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
 
     relax_ode_prob = ODEProblem(f, utemp, d.tspan, p)
     keyword_integator = local_ode_integrator
+    user_t = d.support_set.s
     local_problem_storage = LocalProblemStorage(d, keyword_integator, user_t)
 
     relax_t = Float64[]
@@ -330,18 +332,26 @@ function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
     xL = ElasticArray(zeros(Float64,d.nx,2))
     xU = ElasticArray(zeros(Float64,d.nx,2))
 
+    relax_t_dict_flt = Dict{Float64,Int64}()
+    relax_t_dict_indx = Dict{Int64,Int64}()
+
     DifferentialInequality(calculate_relax, calculate_subgradient, differentiable,
               event_soft_tol, p, pL, pU, p_mc, d.x0, x0temp,
               x0mctemp, xL, xU, relax_ode_prob, relax_ode_integrator, relax_t,
               relax_lo, relax_hi, relax_cv, relax_cc, relax_cv_grad, relax_cc_grad,
               relax_mc, vector_callback, IntegratorStates(),
-              local_problem_storage, np, d.nx, d.polyhedral_constraint)
+              local_problem_storage, np, d.nx, relax_t_dict_flt,
+              relax_t_dict_indx, d.polyhedral_constraint)
 end
 
 function relax!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) where {F, N, T<:RelaxTag,
                                                                     PRB1<:AbstractODEProblem,
                                                                     PRB2<:AbstractODEProblem, INT1,
                                                                     CB<:AbstractContinuousCallback}
+
+    empty!(d.relax_t_dict_flt)
+    empty!(d.relax_t_dict_indx)
+
     # load functors
     if d.integrator_state.new_decision_pnt
         for i=1:d.np
@@ -374,6 +384,24 @@ function relax!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) where 
         new_length::Int = length(relax_ode_sol_t)
         resize!(d.relax_t, new_length)
         d.relax_t .= relax_ode_sol_t
+
+        for (tindx, t) in enumerate(relax_ode_sol_t)
+            d.relax_t_dict_flt[t] = tindx
+        end
+
+        next_support_time = d.local_problem_storage.user_t[1]
+        supports_left = length(d.local_problem_storage.user_t)
+        loc_count = 1
+        for (tindx, t) in enumerate(relax_ode_sol_t)
+            if t == next_support_time
+                d.relax_t_dict_indx[loc_count] = tindx
+                loc_count += 1
+                supports_left -= 1
+                if supports_left > 0
+                    next_support_time = d.local_problem_storage.user_t[loc_count]
+                end
+            end
+        end
 
         resize!(d.relax_lo, d.nx, new_length)
         resize!(d.relax_hi, d.nx, new_length)
@@ -440,6 +468,61 @@ DBB.get(t::DifferentialInequality, v::DBB.SupportSet) =  DBB.SupportSet(t.local_
 DBB.get(t::DifferentialInequality, v::DBB.ParameterNumber) = t.np
 DBB.get(t::DifferentialInequality, v::DBB.StateNumber) = t.nx
 DBB.get(t::DifferentialInequality, v::DBB.SupportNumber) = length(t.local_problem_storage.user_t)
+
+function get_val_loc(t::DifferentialInequality, index::Int64, time::Float64)
+    (index <= 0 && time == -Inf) && error("Must set either index or time.")
+    if index > 0
+        return t.relax_t_dict_indx[index]
+    end
+    t.relax_t_dict_flt[time]
+end
+
+function DBB.get(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Bound{Lower})
+     val_loc = get_val_loc(t, v.index, v.time)
+     out .= t.relax_lo[:, val_loc]
+     return
+end
+function DBB.get(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Bound{Upper})
+    val_loc = get_val_loc(t, v.index, v.time)
+    out .= t.relax_hi[:, val_loc]
+    return
+end
+function DBB.get(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Relaxation{Lower})
+    val_loc = get_val_loc(t, v.index, v.time)
+    out .= t.relax_cv[:, val_loc]
+    return
+end
+function DBB.get(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Relaxation{Upper})
+    val_loc = get_val_loc(t, v.index, v.time)
+    out .= t.relax_cc[:, val_loc]
+    return
+end
+function DBB.get(out::Matrix{Float64}, t::DifferentialInequality, v::DBB.Subgradient{Lower})
+    val_loc = get_val_loc(t, v.index, v.time)
+    for i = 1:t.np
+        if !t.calculate_relax
+            fill!(out, 0.0)
+        else
+            for j = 1:t.nx
+                out[j,i] = t.relax_cv_grad[j,val_loc][i]
+            end
+        end
+    end
+    return
+end
+function DBB.get(out::Matrix{Float64}, t::DifferentialInequality, v::DBB.Subgradient{Upper})
+    val_loc = get_val_loc(t, v.index, v.time)
+    for i = 1:t.np
+        if !t.calculate_relax
+            fill!(out, 0.0)
+        else
+            for j = 1:t.nx
+                out[j,i] = t.relax_cc_grad[j,val_loc][i]
+            end
+        end
+    end
+    return
+end
 
 function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Value)
     copyto!(out, t.local_problem_storage.pode_x)
