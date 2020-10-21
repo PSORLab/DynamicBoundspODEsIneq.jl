@@ -376,9 +376,13 @@ function relax!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) where 
         end
         d.relax_ode_prob = remake(d.relax_ode_prob; u0=d.x0)
         if d.calculate_relax
-            relax_ode_sol = solve(d.relax_ode_prob, d.relax_ode_integrator, callback = d.vector_callback, abstol = 1E-6, reltol = 1E-3)
+            relax_ode_sol = solve(d.relax_ode_prob, d.relax_ode_integrator,
+                                  callback = d.vector_callback, abstol = 1E-6,
+                                  reltol = 1E-3, saveat = d.local_problem_storage.user_t)
         else
-            relax_ode_sol = solve(d.relax_ode_prob, d.relax_ode_integrator, abstol = 1E-6, reltol = 1E-3)
+            relax_ode_sol = solve(d.relax_ode_prob, d.relax_ode_integrator,
+                                  abstol = 1E-6, reltol = 1E-3,
+                                  saveat = d.local_problem_storage.user_t)
         end
         relax_ode_sol_t = relax_ode_sol.t::Vector{Float64}
         new_length::Int = length(relax_ode_sol_t)
@@ -499,6 +503,7 @@ function DBB.get(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Relaxat
 end
 function DBB.get(out::Matrix{Float64}, t::DifferentialInequality, v::DBB.Subgradient{Lower})
     val_loc = get_val_loc(t, v.index, v.time)
+    @show t.np, t.nx
     for i = 1:t.np
         if !t.calculate_relax
             fill!(out, 0.0)
