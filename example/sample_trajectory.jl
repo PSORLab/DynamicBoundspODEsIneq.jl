@@ -51,8 +51,8 @@ set!(prob, ConstantStateBounds(xL, xU))
 
 # Creates the integrator specifying that relaxations and subgradients
 # thereof should be computed.
-integrator = DifferentialInequality(prob, calculate_relax = false,
-                                    calculate_subgradient = false,
+integrator = DifferentialInequality(prob, calculate_relax = true,
+                                    calculate_subgradient = true,
                                     relax_ode_integrator = CVODE_Adams(),
                                     local_ode_integrator = CVODE_Adams())
 

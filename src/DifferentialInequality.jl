@@ -320,7 +320,7 @@ function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
     relax_ode_prob = ODEProblem(f, utemp, d.tspan, p)
     keyword_integator = local_ode_integrator
     user_t = d.support_set.s
-    local_problem_storage = LocalProblemStorage(d, keyword_integator, user_t)
+    local_problem_storage = LocalProblemStorage(d, keyword_integator, user_t, calculate_local_sensitivity)
 
     relax_t = Float64[]
     relax_lo = ElasticArray(zeros(Float64,d.nx,2))

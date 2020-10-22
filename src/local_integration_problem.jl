@@ -38,9 +38,13 @@ function seed_duals(x::AbstractArray{V}, ::Chunk{N} = Chunk(x)) where {V,N}
   duals = [Dual{Nothing}(x[i],seeds[i]) for i in eachindex(x)]
 end
 
-function LocalProblemStorage(d::ODERelaxProb, integator, user_t::Vector{Float64})
+function LocalProblemStorage(d::ODERelaxProb, integator, user_t::Vector{Float64}, senstivity_on::Bool)
     np = length(d.p)
-    pode_problem = ODEForwardSensitivityProblem(d.f, zeros(Float64, d.nx), d.tspan, d.p)
+    if senstivity_on
+        pode_problem = ODEForwardSensitivityProblem(d.f, zeros(Float64, d.nx), d.tspan, d.p)
+    else
+        pode_problem = ODEProblem(d.f, zeros(Float64, d.nx), d.tspan, d.p)
+    end
     pode_x = zeros(Float64, d.nx, length(d.tsupports))
     pode_dxdp = Array{Float64,2}[zeros(Float64, d.nx, length(d.tsupports)) for i=1:np]
     pduals = seed_duals(d.p)

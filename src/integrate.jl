@@ -46,15 +46,30 @@ function integrate!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) wh
                          abstol = d.local_problem_storage.abstol, reltol=d.local_problem_storage.reltol)
     end
 
-    x, dxdp = extract_local_sensitivities(solution)
-    new_length = size(x,2)
+    new_length = length(solution.t)
+    if d.calculate_local_sensitivity
+        x, dxdp = extract_local_sensitivities(solution)
+    else
+        x = solution.u
+    end
+
     resize!(d.local_problem_storage.pode_x, d.nx, new_length)
     resize!(d.local_problem_storage.integrator_t, new_length)
-    d.local_problem_storage.integrator_t .= solution.t
-    d.local_problem_storage.pode_x .= x
-    for i = 1:N
-        resize!(d.local_problem_storage.pode_dxdp[i], d.nx, new_length)
-        d.local_problem_storage.pode_dxdp[i] .= dxdp[i]
+    prior_length = length(d.local_problem_storage.integrator_t)
+    if new_length == prior_length
+        d.local_problem_storage.integrator_t .= solution.t
+    else
+        d.local_problem_storage.integrator_t = solution.t
+    end
+
+    for i = 1:new_length
+        d.local_problem_storage.pode_x[:,i] .= x[i]
+    end
+    if d.calculate_local_sensitivity
+        for i = 1:N
+            resize!(d.local_problem_storage.pode_dxdp[i], d.nx, new_length)
+            d.local_problem_storage.pode_dxdp[i] .= dxdp[i]
+        end
     end
     return
 end
