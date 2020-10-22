@@ -242,6 +242,7 @@ mutable struct DifferentialInequality{F, N, T<:RelaxTag, PRB1<:AbstractODEProble
                  INT1, CB<:AbstractContinuousCallback} <: AbstractODERelaxIntegrator
     calculate_relax::Bool
     calculate_subgradient::Bool
+    calculate_local_sensitivity::Bool
     differentiable::Bool
     event_soft_tol::Float64
     p::Vector{Float64}
@@ -276,6 +277,7 @@ end
 function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
                    calculate_subgradient::Bool = true,
                    differentiable::Bool = false,
+                   calculate_local_sensitivity::Bool = false,
                    event_soft_tol = 1E-4,
                    relax_ode_integrator = CVODE_Adams(),
                    local_ode_integrator = CVODE_Adams())
@@ -335,13 +337,14 @@ function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
     relax_t_dict_flt = Dict{Float64,Int64}()
     relax_t_dict_indx = Dict{Int64,Int64}()
 
-    DifferentialInequality(calculate_relax, calculate_subgradient, differentiable,
-              event_soft_tol, p, pL, pU, p_mc, d.x0, x0temp,
-              x0mctemp, xL, xU, relax_ode_prob, relax_ode_integrator, relax_t,
-              relax_lo, relax_hi, relax_cv, relax_cc, relax_cv_grad, relax_cc_grad,
-              relax_mc, vector_callback, IntegratorStates(),
-              local_problem_storage, np, d.nx, relax_t_dict_flt,
-              relax_t_dict_indx, d.polyhedral_constraint)
+    DifferentialInequality(calculate_relax, calculate_subgradient,
+                          calculate_local_sensitivity, differentiable,
+                          event_soft_tol, p, pL, pU, p_mc, d.x0, x0temp,
+                          x0mctemp, xL, xU, relax_ode_prob, relax_ode_integrator, relax_t,
+                          relax_lo, relax_hi, relax_cv, relax_cc, relax_cv_grad, relax_cc_grad,
+                          relax_mc, vector_callback, IntegratorStates(),
+                          local_problem_storage, np, d.nx, relax_t_dict_flt,
+                          relax_t_dict_indx, d.polyhedral_constraint)
 end
 
 function relax!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) where {F, N, T<:RelaxTag,
@@ -393,16 +396,18 @@ function relax!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) where 
             d.relax_t_dict_flt[t] = tindx
         end
 
-        next_support_time = d.local_problem_storage.user_t[1]
-        supports_left = length(d.local_problem_storage.user_t)
-        loc_count = 1
-        for (tindx, t) in enumerate(relax_ode_sol_t)
-            if t == next_support_time
-                d.relax_t_dict_indx[loc_count] = tindx
-                loc_count += 1
-                supports_left -= 1
-                if supports_left > 0
-                    next_support_time = d.local_problem_storage.user_t[loc_count]
+        if !isempty(d.local_problem_storage.user_t)
+            next_support_time = d.local_problem_storage.user_t[1]
+            supports_left = length(d.local_problem_storage.user_t)
+            loc_count = 1
+            for (tindx, t) in enumerate(relax_ode_sol_t)
+                if t == next_support_time
+                    d.relax_t_dict_indx[loc_count] = tindx
+                    loc_count += 1
+                    supports_left -= 1
+                    if supports_left > 0
+                        next_support_time = d.local_problem_storage.user_t[loc_count]
+                    end
                 end
             end
         end
@@ -467,6 +472,7 @@ DBB.supports(::DifferentialInequality, ::DBB.SupportSet) = true
 DBB.supports(::DifferentialInequality, ::DBB.ParameterNumber) = true
 DBB.supports(::DifferentialInequality, ::DBB.StateNumber) = true
 DBB.supports(::DifferentialInequality, ::DBB.SupportNumber) = true
+DBB.supports(::DifferentialInequality, ::DBB.LocalSensitivityOn) = true
 
 DBB.get(t::DifferentialInequality, v::DBB.IntegratorName) = "DifferentialInequality Integrator"
 DBB.get(t::DifferentialInequality, v::DBB.IsNumeric) = false
@@ -476,6 +482,12 @@ DBB.get(t::DifferentialInequality, v::DBB.SupportSet) =  DBB.SupportSet(t.local_
 DBB.get(t::DifferentialInequality, v::DBB.ParameterNumber) = t.np
 DBB.get(t::DifferentialInequality, v::DBB.StateNumber) = t.nx
 DBB.get(t::DifferentialInequality, v::DBB.SupportNumber) = length(t.local_problem_storage.user_t)
+DBB.get(t::DifferentialInequality, v::DBB.LocalSensitivityOn) = t.calculate_local_sensitivity
+
+function DBB.set!(t::DifferentialInequality, v::DBB.LocalSensitivityOn, b::Bool)
+    t.calculate_local_sensitivity = b
+    return
+end
 
 function get_val_loc(t::DifferentialInequality, index::Int64, time::Float64)
     (index <= 0 && time == -Inf) && error("Must set either index or time.")

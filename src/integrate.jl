@@ -14,13 +14,12 @@
 function integrate!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) where {F, N, T<:RelaxTag, PRB1<:AbstractODEProblem,
                                                           PRB2<:AbstractODEProblem, INT1,
                                                           CB<:AbstractContinuousCallback}
-
     d.local_problem_storage.pduals .= seed_duals(view(d.p, 1:N))
     d.local_problem_storage.x0duals .= d.x0f(d.local_problem_storage.pduals)
-    for i = 1:N
+    for i = 1:d.nx
         d.local_problem_storage.x0local[i] = d.local_problem_storage.x0duals[i].value
-        for j = 1:d.nx
-            d.local_problem_storage.x0local[(j + N + (i-1)*d.nx)] = d.local_problem_storage.x0duals[i].partials[j]
+        for j = 1:N
+            d.local_problem_storage.x0local[(j + d.nx + (i-1)*d.nx)] = d.local_problem_storage.x0duals[i].partials[j]
         end
     end
     d.local_problem_storage.pode_problem = remake(d.local_problem_storage.pode_problem,
