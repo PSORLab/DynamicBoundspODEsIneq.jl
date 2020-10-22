@@ -71,5 +71,29 @@ function integrate!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) wh
             d.local_problem_storage.pode_dxdp[i] .= dxdp[i]
         end
     end
+
+    empty!(d.local_t_dict_flt)
+    empty!(d.local_t_dict_indx)
+
+    for (tindx, t) in enumerate(solution.t)
+        d.local_t_dict_flt[t] = tindx
+    end
+
+    if !isempty(d.local_problem_storage.user_t)
+        next_support_time = d.local_problem_storage.user_t[1]
+        supports_left = length(d.local_problem_storage.user_t)
+        loc_count = 1
+        for (tindx, t) in enumerate(solution.t)
+            if t == next_support_time
+                d.local_t_dict_indx[loc_count] = tindx
+                loc_count += 1
+                supports_left -= 1
+                if supports_left > 0
+                    next_support_time = d.local_problem_storage.user_t[loc_count]
+                end
+            end
+        end
+    end
+
     return
 end

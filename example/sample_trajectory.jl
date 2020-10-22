@@ -34,6 +34,7 @@ pL = [0.1; 0.033; 16.0; 5.0; 0.5; 0.3]
 pU = 10.0*pL
 
 prob = DynamicBoundsBase.ODERelaxProb(f!, tspan, x0, pL, pU)
+set!(prob, SupportSet([i for i in 0.0:18.0e-5*50/10:18.0e-5*50]))
 
 # Define a polyhedral constraint on state variables.
 # In this case it arise from the stiochiometry of the

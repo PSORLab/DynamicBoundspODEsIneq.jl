@@ -271,6 +271,8 @@ mutable struct DifferentialInequality{F, N, T<:RelaxTag, PRB1<:AbstractODEProble
     nx::Int
     relax_t_dict_flt::Dict{Float64,Int64}
     relax_t_dict_indx::Dict{Int64,Int64}
+    local_t_dict_flt::Dict{Float64,Int64}
+    local_t_dict_indx::Dict{Int64,Int64}
     polyhedral_constraint::Union{PolyhedralConstraint,Nothing}
 end
 
@@ -336,6 +338,8 @@ function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
 
     relax_t_dict_flt = Dict{Float64,Int64}()
     relax_t_dict_indx = Dict{Int64,Int64}()
+    local_t_dict_flt = Dict{Float64,Int64}()
+    local_t_dict_indx = Dict{Int64,Int64}()
 
     DifferentialInequality(calculate_relax, calculate_subgradient,
                           calculate_local_sensitivity, differentiable,
@@ -344,7 +348,8 @@ function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
                           relax_lo, relax_hi, relax_cv, relax_cc, relax_cv_grad, relax_cc_grad,
                           relax_mc, vector_callback, IntegratorStates(),
                           local_problem_storage, np, d.nx, relax_t_dict_flt,
-                          relax_t_dict_indx, d.polyhedral_constraint)
+                          relax_t_dict_indx, local_t_dict_flt, local_t_dict_indx,
+                          d.polyhedral_constraint)
 end
 
 function relax!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) where {F, N, T<:RelaxTag,
@@ -497,26 +502,44 @@ function get_val_loc(t::DifferentialInequality, index::Int64, time::Float64)
     t.relax_t_dict_flt[time]
 end
 
+function get_val_loc_local(t::DifferentialInequality, index::Int64, time::Float64)
+    (index <= 0 && time == -Inf) && error("Must set either index or time.")
+    if index > 0
+        return t.local_t_dict_indx[index]
+    end
+    t.local_t_dict_flt[time]
+end
+
+function DBB.get(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Value)
+    val_loc = get_val_loc_local(t, v.index, v.time)
+    out .= t.pode_x[:, val_loc]
+    return
+end
+
 function DBB.get(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Bound{Lower})
      val_loc = get_val_loc(t, v.index, v.time)
      out .= t.relax_lo[:, val_loc]
      return
 end
+
 function DBB.get(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Bound{Upper})
     val_loc = get_val_loc(t, v.index, v.time)
     out .= t.relax_hi[:, val_loc]
     return
 end
+
 function DBB.get(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Relaxation{Lower})
     val_loc = get_val_loc(t, v.index, v.time)
     out .= t.relax_cv[:, val_loc]
     return
 end
+
 function DBB.get(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Relaxation{Upper})
     val_loc = get_val_loc(t, v.index, v.time)
     out .= t.relax_cc[:, val_loc]
     return
 end
+
 function DBB.get(out::Matrix{Float64}, t::DifferentialInequality, v::DBB.Subgradient{Lower})
     val_loc = get_val_loc(t, v.index, v.time)
     @show t.np, t.nx
@@ -531,6 +554,7 @@ function DBB.get(out::Matrix{Float64}, t::DifferentialInequality, v::DBB.Subgrad
     end
     return
 end
+
 function DBB.get(out::Matrix{Float64}, t::DifferentialInequality, v::DBB.Subgradient{Upper})
     val_loc = get_val_loc(t, v.index, v.time)
     for i = 1:t.np
@@ -713,6 +737,15 @@ end
 
 DBB.getall(t::DifferentialInequality, v::DBB.ParameterBound{Lower}) = t.pL
 DBB.getall(t::DifferentialInequality, v::DBB.ParameterBound{Upper}) = t.pU
+
+function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.ParameterBound{Lower})
+    out .= t.pL
+    return
+end
+function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.ParameterBound{Upper})
+    out .= t.pU
+    return
+end
 
 function DBB.set!(t::DifferentialInequality, v::DBB.ParameterValue, value::T) where T <: Union{Integer, AbstractFloat}
     t.integrator_state.new_decision_pnt = true
