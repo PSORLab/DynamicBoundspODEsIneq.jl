@@ -747,7 +747,7 @@ function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Par
 end
 
 function DBB.getall!(out::Vector{Float64}, t::DifferentialInequality, v::DBB.ParameterValue)
-    out .= t.p
+    out .= t.p[1:t.np]
     return
 end
 
