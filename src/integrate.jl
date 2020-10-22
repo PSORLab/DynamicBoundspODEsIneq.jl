@@ -16,10 +16,21 @@ function integrate!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) wh
                                                           CB<:AbstractContinuousCallback}
     d.local_problem_storage.pduals .= seed_duals(view(d.p, 1:N))
     d.local_problem_storage.x0duals .= d.x0f(d.local_problem_storage.pduals)
+    if !d.calculate_local_sensitivity
+        if length(d.local_problem_storage.x0local) != d.nx
+            resize!(d.local_problem_storage.x0local, d.nx)
+        end
+    else
+        if length(d.local_problem_storage.x0local) != d.nx*(d.np + 1)
+            resize!(d.local_problem_storage.x0local, d.nx*(d.np + 1))
+        end
+    end
     for i = 1:d.nx
         d.local_problem_storage.x0local[i] = d.local_problem_storage.x0duals[i].value
-        for j = 1:N
-            d.local_problem_storage.x0local[(j + d.nx + (i-1)*d.nx)] = d.local_problem_storage.x0duals[i].partials[j]
+        if d.calculate_local_sensitivity
+            for j = 1:N
+                d.local_problem_storage.x0local[(j + d.nx + (i-1)*d.nx)] = d.local_problem_storage.x0duals[i].partials[j]
+            end
         end
     end
     d.local_problem_storage.pode_problem = remake(d.local_problem_storage.pode_problem,
