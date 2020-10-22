@@ -512,7 +512,7 @@ end
 
 function DBB.get(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Value)
     val_loc = get_val_loc_local(t, v.index, v.time)
-    out .= t.pode_x[:, val_loc]
+    out .= t.local_problem_storage.pode_x[:, val_loc]
     return
 end
 
