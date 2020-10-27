@@ -477,7 +477,7 @@ DBB.supports(::DifferentialInequality, ::DBB.SupportSet) = true
 DBB.supports(::DifferentialInequality, ::DBB.ParameterNumber) = true
 DBB.supports(::DifferentialInequality, ::DBB.StateNumber) = true
 DBB.supports(::DifferentialInequality, ::DBB.SupportNumber) = true
-DBB.supports(::DifferentialInequality, ::DBB.LocalSensitivityOn) = true
+DBB.supports(t::DifferentialInequality, ::DBB.LocalSensitivityOn) = t.calculate_local_sensitivity
 
 DBB.get(t::DifferentialInequality, v::DBB.IntegratorName) = "DifferentialInequality Integrator"
 DBB.get(t::DifferentialInequality, v::DBB.IsNumeric) = false
