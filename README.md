@@ -3,7 +3,7 @@ Differential Inequality Algorithms for DynamicBounds.jl
 
 | **Linux/OS/Windows**                                                                     | **Coverage**                                             |                       
 |:--------------------------------------------------------------------------------:|:-------------------------------------------------------:|
-| [![Build Status](https://github.com/PSORLab/DynamicBoundspODEsIneq.jl/workflows/CI/badge.svg?branch=master)](https://github.com/PSORLab/DynamicBoundspODEsIneq.jl/actions?query=workflow%3ACI)  | [![Coverage Status](https://coveralls.io/repos/github/PSORLab/DynamicBoundspODEsIneq.jl/badge.svg?branch=master)](https://coveralls.io/github/PSORLab/DynamicBoundspODEsIneq.jl?branch=master)                        
+| [![Build Status](https://github.com/PSORLab/DynamicBoundspODEsIneq.jl/workflows/CI/badge.svg?branch=master)](https://github.com/PSORLab/DynamicBoundspODEsIneq.jl/actions?query=workflow%3ACI)  | [![codecov](https://codecov.io/gh/PSORLab/DynamicBoundspODEsIneq.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/PSORLab/DynamicBoundspODEsIneq.jl))                        
 
 ## Summary
 This package implements a continuous-time differential inequality approach to
