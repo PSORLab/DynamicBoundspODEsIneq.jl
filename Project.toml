@@ -23,7 +23,7 @@ ElasticArrays = "~1"
 ForwardDiff = "~0.10"
 McCormick = "~0.10"
 Reexport = "~0.2"
-Sundials = "3.8.3"
+Sundials = "~3, ~4"
 julia = "~1"
 
 [extras]
