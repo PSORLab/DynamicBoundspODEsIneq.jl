@@ -15,7 +15,7 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Sundials = "c3572dad-4567-51f8-b174-8c6c989267f4"
 
 [compat]
-DiffEqBase = "6.12.2"
+DiffEqBase = "~6"
 DiffEqSensitivity = "~6"
 DocStringExtensions = "~0.8"
 DynamicBoundsBase = "~0.5"
