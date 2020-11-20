@@ -17,7 +17,7 @@ const DBB = DynamicBoundsBase
     end
 
 
-    tspan = (0.0,18.0e-5*50)
+    tspan = (0.0, 0.1)
     pL = [0.1; 0.033; 16.0; 5.0; 0.5; 0.3]
     pU = 10.0*pL
 
@@ -38,12 +38,12 @@ const DBB = DynamicBoundsBase
 
     relax!(integrator)
 
-    @test isapprox(integrator.relax_lo[6,77], 0.0169958, atol = 1E-5)
-    @test isapprox(integrator.relax_hi[6,77], 8.08922, atol = 1E-3)
-    @test isapprox(integrator.relax_cv[6,77], 0.0169958, atol = 1E-5)
-    @test isapprox(integrator.relax_cc[6,77], 4.15395, atol = 1E-3)
+    @test isapprox(integrator.relax_lo[6,77], 0.021504949016377915, atol = 1E-5)
+    @test isapprox(integrator.relax_hi[6,77], 10.049461417090038, atol = 1E-3)
+    @test isapprox(integrator.relax_cv[6,77], 0.02150494901637792, atol = 1E-5)
+    @test isapprox(integrator.relax_cc[6,77], 5.173156379620435, atol = 1E-3)
     @test isapprox(integrator.relax_cv_grad[6,77][6], -0.00767, atol = 1E-5)
-    @test isapprox(integrator.relax_cc_grad[6,77][5], 0.002858, atol = 1E-5)
+    @test isapprox(integrator.relax_cc_grad[6,77][5], 0.004196170550054147, atol = 1E-5)
 end
 
 @testset "Access functions" begin
@@ -58,11 +58,13 @@ end
         return
     end
 
-    tspan = (0.0,18.0e-5*50)
+    tspan = (0.0, 0.1)
     pL = [0.1; 0.033; 16.0; 5.0; 0.5; 0.3]
     pU = 10.0*pL
 
     prob = DynamicBoundsBase.ODERelaxProb(f!, tspan, x0, pL, pU)
+
+    set!(prob, DBB.SupportSet([i for i in 0.0:0.005:0.1]))
 
     A = [0.0 -1.0 -1.0  0.0  0.0  0.0;
          0.0  0.0  0.0  0.0 -1.0 -1.0;
@@ -75,13 +77,16 @@ end
     set!(prob, ConstantStateBounds(xL,xU))
 
     integrator = DifferentialInequality(prob, calculate_relax = true,
-                                        calculate_subgradient = true)
+                                        calculate_subgradient = true,
+                                        calculate_local_sensitivity = true)
 
     @test DBB.supports(integrator, DBB.IntegratorName())
     @test DBB.supports(integrator, DBB.Gradient())
     @test DBB.supports(integrator, DBB.Subgradient())
-    @test DBB.supports(integrator, DBB.Bound())
-    @test DBB.supports(integrator, DBB.Relaxation())
+    @test DBB.supports(integrator, DBB.Bound{Lower}())
+    @test DBB.supports(integrator, DBB.Bound{Upper}())
+    @test DBB.supports(integrator, DBB.Relaxation{Lower}())
+    @test DBB.supports(integrator, DBB.Relaxation{Upper}())
     @test DBB.supports(integrator, DBB.IsNumeric())
     @test DBB.supports(integrator, DBB.IsSolutionSet())
     @test DBB.supports(integrator, DBB.TerminationStatus())
@@ -96,64 +101,64 @@ end
     DBB.relax!(integrator)
     DBB.integrate!(integrator)
 
-    t = integrator
-
     support_set = DBB.get(integrator, DBB.SupportSet())
-    @test isapprox(support_set.s[2], 1.411753923977542e-11)
+    @test isapprox(support_set.s[2], 0.005)
 
-    vout = zeros(6, size(t.local_problem_storage.pode_x, 2))
+    vout = zeros(6, size(integrator.local_problem_storage.pode_x, 2))
     DBB.getall!(vout, integrator, Value())
-    @test isapprox(vout[5,end], 15.388489679114812, atol = 1E-8)
-    @test isapprox(vout[6,end], 0.6115103208851901, atol = 1E-8)
+    @test isapprox(vout[5,end], 0.13476110749580916, atol = 1E-8)
+    @test isapprox(vout[6,end], 0.13476110749580916, atol = 1E-8)
+
 
     out2 = Matrix{Float64}[]
     for i = 1:6
-        push!(out2, zeros(6, size(t.local_problem_storage.pode_x, 2)))
+        push!(out2, zeros(6, size(integrator.local_problem_storage.pode_dxdp[1], 2)))
     end
     DBB.getall!(out2, integrator, DBB.Gradient{Nominal}())
-    @test isapprox(out2[2][3, 20], -0.00015998255331242103, atol = 1E-8)
+    @test isapprox(out2[2][3, 20], -0.00015954077851070749, atol = 1E-8)
 
     out3 = Matrix{Float64}[]
     for i = 1:6
-        push!(out3, zeros(6, size(t.local_problem_storage.pode_x, 2)))
+        push!(out3, zeros(6, size(integrator.local_problem_storage.pode_dxdp[1], 2)))
     end
     @test_throws ErrorException DBB.getall!(out3, integrator, DBB.Gradient{Lower}())
 
     out4 = Matrix{Float64}[]
     for i = 1:6
-        push!(out4, zeros(6, size(t.local_problem_storage.pode_x, 2)))
+        push!(out4, zeros(6, size(integrator.local_problem_storage.pode_dxdp[1], 2)))
     end
     @test_throws ErrorException DBB.getall!(out4, integrator, DBB.Gradient{Upper}())
 
     out5 = Matrix{Float64}[]
     for i = 1:6
-        push!(out5, zeros(6, size(t.local_problem_storage.pode_x, 2)))
+        push!(out5, zeros(6, size(integrator.local_problem_storage.pode_dxdp[1], 2)))
     end
-    DBB.getall!(out5, integrator, Subgradient{Lower}())
-    @test isapprox(out5[2][3, 20], -0.0009550904931136906, atol = 1E-8)
+    DBB.getall!(out5, integrator, DBB.Subgradient{Lower}())
+    @test isapprox(out5[2][3, 20], 0.0, atol = 1E-8)
 
     out6 = Matrix{Float64}[]
     for i = 1:6
-        push!(out6, zeros(6, size(t.local_problem_storage.pode_x, 2)))
+        push!(out6, zeros(6, size(integrator.local_problem_storage.pode_dxdp[1], 2)))
     end
     DBB.getall!(out6, integrator, DBB.Subgradient{Upper}())
-    @test isapprox(out6[2][3, 20], -7.440794834434013e-5, atol = 1E-8)
+    @test isapprox(out6[2][3, 20], 0.0, atol = 1E-8)
 
-    out7 = zeros(6, size(t.relax_lo,2))
+
+    out7 = zeros(6, size(integrator.relax_lo,2))
     DBB.getall!(out7, integrator, DBB.Bound{Lower}())
-    @test isapprox(out7[6, 77], 0.01699582373787887, atol = 1E-8)
+    @test isapprox(out7[6, 21], 0.09008717985737755, atol = 1E-8)
 
-    out8 = zeros(6, size(t.relax_lo,2))
+    out8 = zeros(6, size(integrator.relax_lo,2))
     DBB.getall!(out8, integrator, DBB.Bound{Upper}())
-    @test isapprox(out8[6, 77], 8.089220917692634, atol = 1E-8)
+    @test isapprox(out8[6, 21], 1066.5815332523712, atol = 1E-8)
 
-    out11 = zeros(6, size(t.relax_lo,2))
+    out11 = zeros(6, size(integrator.relax_lo,2))
     DBB.getall!(out11, integrator, DBB.Relaxation{Lower}())
-    @test isapprox(out11[6, 77], 0.01699582373787887, atol = 1E-8)
+    @test isapprox(out11[6, 21], 0.09008717985737755, atol = 1E-8)
 
-    out12 = zeros(6, size(t.relax_lo,2))
+    out12 = zeros(6, size(integrator.relax_lo,2))
     DBB.getall!(out12, integrator, DBB.Relaxation{Upper}())
-    @test isapprox(out12[6, 77], 4.153947135290472, atol = 1E-8)
+    @test isapprox(out12[6, 21], 976.3394543605548, atol = 1E-8)
 
     val1 = zeros(6) .- 0.1
     DBB.setall!(integrator, DBB.ParameterBound{Lower}(), val1)
@@ -179,11 +184,11 @@ end
     DBB.set!(integrator, DBB.ParameterValue(2), val03)
     @test integrator.p[2] == 0.2
 
-    out15 = zeros(size(t.relax_lo,2))
+    out15 = zeros(size(integrator.relax_lo,2))
     DBB.getall!(out15, integrator, DBB.Bound{Lower}())
-    @test isapprox(out15[12], 33.552829768732664, atol = 1E-8)
+    @test isapprox(out15[12], 11.452655899207926, atol = 1E-8)
 
-    out16 = zeros(size(t.relax_lo,2))
+    out16 = zeros(size(integrator.relax_lo,2))
     DBB.getall!(out16, integrator, DBB.Bound{Upper}())
-    @test isapprox(out16[12], 33.95462900665603, atol = 1E-8)
+    @test isapprox(out16[12], 32.8336928873473, atol = 1E-8)
 end

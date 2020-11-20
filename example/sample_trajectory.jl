@@ -29,12 +29,12 @@ function f!(du, u, p, t)
     return
 end
 
-tspan = (0.0,18.0e-5*50)
+tspan = (0.0, 0.1)
 pL = [0.1; 0.033; 16.0; 5.0; 0.5; 0.3]
 pU = 10.0*pL
 
 prob = DynamicBoundsBase.ODERelaxProb(f!, tspan, x0, pL, pU)
-set!(prob, SupportSet([i for i in 0.0:18.0e-5*50/10:18.0e-5*50]))
+set!(prob, SupportSet([i for i in 0.0:0.005:0.1]))
 
 # Define a polyhedral constraint on state variables.
 # In this case it arise from the stiochiometry of the
@@ -52,8 +52,8 @@ set!(prob, ConstantStateBounds(xL, xU))
 
 # Creates the integrator specifying that relaxations and subgradients
 # thereof should be computed.
-integrator = DifferentialInequality(prob, calculate_relax = true,
-                                    calculate_subgradient = true,
+integrator = DifferentialInequality(prob, calculate_relax = false,
+                                    calculate_subgradient = false,
                                     relax_ode_integrator = CVODE_Adams(),
                                     local_ode_integrator = CVODE_Adams())
 

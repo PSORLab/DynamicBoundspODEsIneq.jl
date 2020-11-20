@@ -574,24 +574,32 @@ function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Va
 end
 
 function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Subgradient{Lower})
-    for i = 1:t.np
-        if !t.calculate_relax
+    if !t.calculate_relax
+        for i = 1:t.np
             fill!(out[i], 0.0)
-        else
-            @inbounds for j in eachindex(out[i])
-                out[i][j] = t.relax_cv_grad[j][i]
+        end
+    else
+        for i = 1:length(t.relax_cv_grad[1])
+            for j = 1:t.np
+                for k = 1:t.nx
+                    out[j][k,i]= t.relax_cv_grad[k,i][j]
+                end
             end
         end
     end
     return
 end
 function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Subgradient{Upper})
-    for i = 1:t.np
-        if !t.calculate_relax
+    if !t.calculate_relax
+        for i = 1:t.np
             fill!(out[i], 0.0)
-        else
-            @inbounds for j in eachindex(out[i])
-                out[i][j] = t.relax_cc_grad[j][i]
+        end
+    else
+        for i = 1:length(t.relax_cc_grad[1])
+            for j = 1:t.np
+                for k = 1:t.nx
+                    out[j][k,i]= t.relax_cc_grad[k,i][j]
+                end
             end
         end
     end
