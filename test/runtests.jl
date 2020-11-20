@@ -106,8 +106,8 @@ end
 
     vout = zeros(6, size(integrator.local_problem_storage.pode_x, 2))
     DBB.getall!(vout, integrator, Value())
-    @test isapprox(vout[5,end], 0.13476110749580916, atol = 1E-8)
-    @test isapprox(vout[6,end], 0.13476110749580916, atol = 1E-8)
+    @test isapprox(vout[5,end], 0.13476110749580916, atol = 1E-5)
+    @test isapprox(vout[6,end], 0.13476110749580916, atol = 1E-5)
 
 
     out2 = Matrix{Float64}[]
@@ -115,7 +115,7 @@ end
         push!(out2, zeros(6, size(integrator.local_problem_storage.pode_dxdp[1], 2)))
     end
     DBB.getall!(out2, integrator, DBB.Gradient{Nominal}())
-    @test isapprox(out2[2][3, 20], -0.00015954077851070749, atol = 1E-8)
+    @test isapprox(out2[2][3, 20], -0.00015954077851070749, atol = 1E-5)
 
     out3 = Matrix{Float64}[]
     for i = 1:6
@@ -146,19 +146,19 @@ end
 
     out7 = zeros(6, size(integrator.relax_lo,2))
     DBB.getall!(out7, integrator, DBB.Bound{Lower}())
-    @test isapprox(out7[6, 21], 0.09008717985737755, atol = 1E-8)
+    @test isapprox(out7[6, 21], 0.09008717985737755, atol = 1E-5)
 
     out8 = zeros(6, size(integrator.relax_lo,2))
     DBB.getall!(out8, integrator, DBB.Bound{Upper}())
-    @test isapprox(out8[6, 21], 1066.5815332523712, atol = 1E-8)
+    @test isapprox(out8[6, 21], 1066.5815332523712, atol = 1E-5)
 
     out11 = zeros(6, size(integrator.relax_lo,2))
     DBB.getall!(out11, integrator, DBB.Relaxation{Lower}())
-    @test isapprox(out11[6, 21], 0.09008717985737755, atol = 1E-8)
+    @test isapprox(out11[6, 21], 0.09008717985737755, atol = 1E-5)
 
     out12 = zeros(6, size(integrator.relax_lo,2))
     DBB.getall!(out12, integrator, DBB.Relaxation{Upper}())
-    @test isapprox(out12[6, 21], 976.3394543605548, atol = 1E-8)
+    @test isapprox(out12[6, 21], 976.3394543605548, atol = 1E-5)
 
     val1 = zeros(6) .- 0.1
     DBB.setall!(integrator, DBB.ParameterBound{Lower}(), val1)
@@ -186,9 +186,9 @@ end
 
     out15 = zeros(size(integrator.relax_lo,2))
     DBB.getall!(out15, integrator, DBB.Bound{Lower}())
-    @test isapprox(out15[12], 11.452655899207926, atol = 1E-8)
+    @test isapprox(out15[12], 11.452655899207926, atol = 1E-5)
 
     out16 = zeros(size(integrator.relax_lo,2))
     DBB.getall!(out16, integrator, DBB.Bound{Upper}())
-    @test isapprox(out16[12], 32.8336928873473, atol = 1E-8)
+    @test isapprox(out16[12], 32.8336928873473, atol = 1E-5)
 end
