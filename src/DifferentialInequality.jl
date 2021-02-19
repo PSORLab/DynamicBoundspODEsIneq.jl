@@ -75,7 +75,7 @@ following constructor is used to initialize it:
 
 $(TYPEDFIELDS)
 """
-struct DifferentialInequalityf{Z, F} <: Function
+mutable struct DifferentialInequalityf{Z, F} <: Function
     "Right-hand side function"
     f!::F
     "Number of state variables"
@@ -112,20 +112,30 @@ struct DifferentialInequalityf{Z, F} <: Function
     polyhedral_constraint::Union{PolyhedralConstraint, Nothing}
     has_apriori::Bool
     Xapriori::Vector{Interval{Float64}}
+    "Constant value parameters"
+    params::Vector{Float64}
+    has_params::Bool
 end
 
 size(x::PolyhedralConstraint) = size(x.A)
 size(x::Nothing) = 0,0
 
+function set_parameters!(cb::DifferentialInequalityf, values::Vector{Float64})
+    cb.params = values
+    nothing
+end
+
 function DifferentialInequalityf(f!, Z, nx::Int, np::Int, P, relax::Bool, subgrad::Bool,
-                    polyhedral_constraint, Xapriori)
+                                 polyhedral_constraint, Xapriori, params)
+     has_params = !isempty(params)
      np = length(P)
      s1, s2 = size(polyhedral_constraint)
      DifferentialInequalityf{Z,typeof(f!)}(f!, nx, s1, np, zeros(Z, np), P,
                               zeros(Interval{Float64}, nx), zeros(Z, nx), zeros(Z, nx),
                               zeros(Interval{Float64}, nx), zeros(Interval{Float64}, nx),
                               zeros(Interval{Float64}, nx), zeros(Interval{Float64}, nx),
-                              relax, subgrad, 1:np, 1:nx, polyhedral_constraint, false, Xapriori)
+                              relax, subgrad, 1:np, 1:nx, polyhedral_constraint, false, Xapriori,
+                              params, has_params)
 end
 
 function (d::DifferentialInequalityf{MC{N,T},F})(dx::Vector{Float64}, x::Vector{Float64},
@@ -134,6 +144,7 @@ function (d::DifferentialInequalityf{MC{N,T},F})(dx::Vector{Float64}, x::Vector{
     np = d.np
     nm = d.nm
     nx = d.nx
+    has_params = d.has_params
 
     if d.calculate_relax
         d.p_mc.= MC{N,T}.(p[1:np], d.P, d.prng)
@@ -163,18 +174,31 @@ function (d::DifferentialInequalityf{MC{N,T},F})(dx::Vector{Float64}, x::Vector{
     d.BetaU .= d.X
 
     if d.calculate_relax
-        d.f!(d.xout_mc, d.x_mc, d.p_mc, t)
+        if d.has_params
+            d.f!(d.xout_mc, d.x_mc, d.p_mc, t, d.params)
+        else
+            d.f!(d.xout_mc, d.x_mc, d.p_mc, t)
+        end
     end
 
     for i = d.xrng
         d.BetaL[i] = @interval(x[i])
         polyhedral_contact!(d.polyhedral_constraint, d.BetaL, d.Xapriori, nx, nm)
-        d.f!(d.xout_intv1, d.BetaL, d.P, @interval(t))
+        if has_params
+            d.f!(d.xout_intv1, d.BetaL, d.P, @interval(t), d.params)
+        else
+            d.f!(d.xout_intv1, d.BetaL, d.P, @interval(t))
+        end
         dx[i] = d.xout_intv1[i].lo
 
         d.BetaU[i] = @interval(x[nx+i])
         polyhedral_contact!(d.polyhedral_constraint, d.BetaU, d.Xapriori, nx, nm)
         d.f!(d.xout_intv2, d.BetaU, d.P, @interval(t))
+        if has_params
+            d.f!(d.xout_intv2, d.BetaU, d.P, @interval(t), d.params)
+        else
+            d.f!(d.xout_intv2, d.BetaU, d.P, @interval(t), d.params)
+        end
         dx[nx+i] = d.xout_intv2[i].hi
 
         if d.calculate_relax
@@ -245,6 +269,7 @@ mutable struct DifferentialInequality{F, N, T<:RelaxTag, PRB1<:AbstractODEProble
     calculate_local_sensitivity::Bool
     differentiable::Bool
     event_soft_tol::Float64
+    params::Vector{Float64}
     p::Vector{Float64}
     pL::Vector{Float64}
     pU::Vector{Float64}
@@ -274,6 +299,7 @@ mutable struct DifferentialInequality{F, N, T<:RelaxTag, PRB1<:AbstractODEProble
     local_t_dict_flt::Dict{Float64,Int64}
     local_t_dict_indx::Dict{Int64,Int64}
     polyhedral_constraint::Union{PolyhedralConstraint,Nothing}
+    has_params::Bool
 end
 
 function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
@@ -307,6 +333,8 @@ function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
                                                rootfind=true, save_positions=(false,false),
                                                interp_points=20)
 
+    has_params = !isempty(d.params)
+    params = has_params ? d.params : Float64[]
     P = Interval{Float64}.(pL, pU)
     p_mc = zeros(Z, np)
     const_bnds = d.constant_state_bounds # const_bnds = get(d, ConstantBounds())
@@ -317,7 +345,7 @@ function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
         X_natural_box = fill(Interval{Float64}(-Inf,Inf), d.nx)
     end
     f = DifferentialInequalityf(d.f, Z, d.nx, np, P, calculate_relax, calculate_subgradient,
-                   polyhedral_constraint, X_natural_box)
+                                polyhedral_constraint, X_natural_box, params)
 
     relax_ode_prob = ODEProblem(f, utemp, d.tspan, p)
     keyword_integator = local_ode_integrator
@@ -343,13 +371,13 @@ function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
 
     DifferentialInequality(calculate_relax, calculate_subgradient,
                           calculate_local_sensitivity, differentiable,
-                          event_soft_tol, p, pL, pU, p_mc, d.x0, x0temp,
+                          event_soft_tol, params, p, pL, pU, p_mc, d.x0, x0temp,
                           x0mctemp, xL, xU, relax_ode_prob, relax_ode_integrator, relax_t,
                           relax_lo, relax_hi, relax_cv, relax_cc, relax_cv_grad, relax_cc_grad,
                           relax_mc, vector_callback, IntegratorStates(),
                           local_problem_storage, np, d.nx, relax_t_dict_flt,
                           relax_t_dict_indx, local_t_dict_flt, local_t_dict_indx,
-                          d.polyhedral_constraint)
+                          d.polyhedral_constraint, has_params)
 end
 
 function relax!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) where {F, N, T<:RelaxTag,
@@ -367,7 +395,11 @@ function relax!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) where 
             d.p_mc[i] = MC{N, NS}(d.p[i], d.relax_ode_prob.f.f.P[i], i)
         end
         # populate initial condition
-        d.x0_mc = d.x0f(d.p_mc)
+        if d.has_params
+            d.x0_mc = d.x0f(d.p_mc, d.params)
+        else
+            d.x0_mc = d.x0f(d.p_mc)
+        end
         for i=1:d.nx
             d.x0[i] = d.x0_mc[i].Intv.lo
             d.x0[d.nx + i] = d.x0_mc[i].Intv.hi
@@ -382,6 +414,7 @@ function relax!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) where 
                 end
             end
         end
+        d.relax_ode_prob.f.f.params .= d.params
         d.relax_ode_prob = remake(d.relax_ode_prob; u0=d.x0)
         if d.calculate_relax
             relax_ode_sol = solve(d.relax_ode_prob, d.relax_ode_integrator,
@@ -729,6 +762,32 @@ function DBB.setall!(t::DifferentialInequality, v::DBB.ParameterValue, value::Ve
     end
     return
 end
+
+function DBB.set!(t::DifferentialInequality, v::DBB.ConstantParameterValue, value)
+    t.integrator_state.new_decision_pnt = true
+    t.params[v.i] = value
+    return
+end
+function DBB.setall!(t::DifferentialInequality, v::DBB.ConstantParameterValue, value::Vector{Float64})
+    t.integrator_state.new_decision_pnt = true
+    @inbounds for i = 1:t.np
+        t.params[i] = value[i]
+    end
+    return
+end
+
+function DBB.get(t::DifferentialInequality, v::DBB.ConstantParameterValue)
+    return t.params[v.i]
+end
+function DBB.getall(t::DifferentialInequality, v::DBB.ConstantParameterValue)
+    return t.params
+end
+function DBB.getall(out, t::DifferentialInequality, v::DBB.ConstantParameterValue)
+    out .= t.params
+    return
+end
+
+
 
 function DBB.set!(t::DifferentialInequality, v::DBB.ParameterBound{Lower}, value::T) where T <: Union{Integer, AbstractFloat}
     t.integrator_state.new_decision_box = true
