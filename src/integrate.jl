@@ -25,11 +25,12 @@ function integrate!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) wh
             resize!(d.local_problem_storage.x0local, d.nx*(d.np + 1))
         end
     end
+
     for i = 1:d.nx
         d.local_problem_storage.x0local[i] = d.local_problem_storage.x0duals[i].value
         if d.calculate_local_sensitivity
-            for j = 1:N
-                d.local_problem_storage.x0local[(j + d.nx + (i-1)*d.nx)] = d.local_problem_storage.x0duals[i].partials[j]
+            for j = 1:d.np
+                d.local_problem_storage.x0local[(d.nx + j + (i-1)*d.np)] = d.local_problem_storage.x0duals[i].partials[j]
             end
         end
     end

@@ -575,6 +575,7 @@ end
 
 function DBB.get(out::Matrix{Float64}, t::DifferentialInequality, v::DBB.Subgradient{Lower})
     val_loc = get_val_loc(t, v.index, v.time)
+
     for i = 1:t.np
         if !t.calculate_relax
             fill!(out, 0.0)
