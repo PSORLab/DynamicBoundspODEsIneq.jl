@@ -197,7 +197,7 @@ function (d::DifferentialInequalityf{MC{N,T},F})(dx::Vector{Float64}, x::Vector{
         if has_params
             d.f!(d.xout_intv2, d.BetaU, d.P, @interval(t), d.params)
         else
-            d.f!(d.xout_intv2, d.BetaU, d.P, @interval(t), d.params)
+            d.f!(d.xout_intv2, d.BetaU, d.P, @interval(t))
         end
         dx[nx+i] = d.xout_intv2[i].hi
 
