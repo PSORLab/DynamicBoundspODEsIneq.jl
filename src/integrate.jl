@@ -15,6 +15,7 @@ function integrate!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) wh
                                                           PRB2<:AbstractODEProblem, INT1,
                                                           CB<:AbstractContinuousCallback}
     d.local_problem_storage.pduals .= seed_duals(view(d.p, 1:N))
+
     d.local_problem_storage.x0duals .= d.x0f(d.local_problem_storage.pduals)
     if !d.calculate_local_sensitivity
         if length(d.local_problem_storage.x0local) != d.nx
@@ -38,9 +39,10 @@ function integrate!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) wh
                                                   u0 = d.local_problem_storage.x0local,
                                                   p = d.p[1:d.np])
 
+    @show length(d.local_problem_storage.user_t)
     if ~isempty(d.local_problem_storage.user_t)
         solution = solve(d.local_problem_storage.pode_problem, d.local_problem_storage.integrator,
-                     tstops = d.local_problem_storage.user_t, abstol = d.local_problem_storage.abstol,
+                     saveat = d.local_problem_storage.user_t, abstol = d.local_problem_storage.abstol,
                      adaptive = false, reltol=d.local_problem_storage.reltol)
     else
         solution = solve(d.local_problem_storage.pode_problem, d.local_problem_storage.integrator,

@@ -305,7 +305,7 @@ end
 function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
                    calculate_subgradient::Bool = true,
                    differentiable::Bool = false,
-                   calculate_local_sensitivity::Bool = false,
+                   calculate_local_sensitivity::Bool = true,
                    event_soft_tol = 1E-4,
                    relax_ode_integrator = CVODE_Adams(),
                    local_ode_integrator = CVODE_Adams())
@@ -641,6 +641,8 @@ function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g
 end
 
 function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Gradient{Nominal})
+    @show size(out[1])
+    @show size(t.local_problem_storage.pode_dxdp[1])
     for i = 1:t.np
         copyto!(out[i], t.local_problem_storage.pode_dxdp[i])
     end
