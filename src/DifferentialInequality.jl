@@ -262,7 +262,7 @@ Otherwise, only `np` parameter values are used.
 
 $(TYPEDFIELDS)
 """
-mutable struct DifferentialInequality{F, N, T<:RelaxTag, PRB1<:AbstractODEProblem, PRB2<:AbstractODEProblem,
+mutable struct DifferentialInequality{F, N, T<:RelaxTag, PRB1<:AbstractODEProblem,
                  INT1, CB<:AbstractContinuousCallback} <: AbstractODERelaxIntegrator
     calculate_relax::Bool
     calculate_subgradient::Bool
@@ -291,7 +291,7 @@ mutable struct DifferentialInequality{F, N, T<:RelaxTag, PRB1<:AbstractODEProble
     relax_mc::ElasticArray{MC{N,T},2,1}
     vector_callback::CB
     integrator_state::IntegratorStates
-    local_problem_storage::LocalProblemStorage{PRB2, INT1, N}
+    local_problem_storage
     np::Int
     nx::Int
     relax_t_dict_flt::Dict{Float64,Int64}
@@ -300,6 +300,7 @@ mutable struct DifferentialInequality{F, N, T<:RelaxTag, PRB1<:AbstractODEProble
     local_t_dict_indx::Dict{Int64,Int64}
     polyhedral_constraint::Union{PolyhedralConstraint,Nothing}
     has_params::Bool
+    prob::ODERelaxProb
 end
 
 function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
@@ -377,12 +378,11 @@ function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
                           relax_mc, vector_callback, IntegratorStates(),
                           local_problem_storage, np, d.nx, relax_t_dict_flt,
                           relax_t_dict_indx, local_t_dict_flt, local_t_dict_indx,
-                          d.polyhedral_constraint, has_params)
+                          d.polyhedral_constraint, has_params, d)
 end
 
-function relax!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) where {F, N, T<:RelaxTag,
-                                                                    PRB1<:AbstractODEProblem,
-                                                                    PRB2<:AbstractODEProblem, INT1,
+function relax!(d::DifferentialInequality{F, N, T, PRB1, INT1, CB}) where {F, N, T<:RelaxTag,
+                                                                    PRB1<:AbstractODEProblem, INT1,
                                                                     CB<:AbstractContinuousCallback}
 
     empty!(d.relax_t_dict_flt)
@@ -523,7 +523,13 @@ DBB.get(t::DifferentialInequality, v::DBB.SupportNumber) = length(t.local_proble
 DBB.get(t::DifferentialInequality, v::DBB.LocalSensitivityOn) = t.calculate_local_sensitivity
 
 function DBB.set!(t::DifferentialInequality, v::DBB.LocalSensitivityOn, b::Bool)
-    t.calculate_local_sensitivity = b
+    if t.calculate_local_sensitivity != b
+        t.calculate_local_sensitivity = b
+        keyword_integator = t.local_problem_storage.integrator
+        user_t = t.prob.support_set.s
+        t.local_problem_storage = LocalProblemStorage(t.prob, keyword_integator, user_t, t.calculate_local_sensitivity)
+        return
+    end
     return
 end
 
@@ -641,8 +647,6 @@ function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g
 end
 
 function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Gradient{Nominal})
-    @show size(out[1])
-    @show size(t.local_problem_storage.pode_dxdp[1])
     for i = 1:t.np
         copyto!(out[i], t.local_problem_storage.pode_dxdp[i])
     end

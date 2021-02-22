@@ -11,8 +11,8 @@
 # Code used to integrate but not relax the underlying parametric ODE system.
 #############################################################################
 
-function integrate!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) where {F, N, T<:RelaxTag, PRB1<:AbstractODEProblem,
-                                                          PRB2<:AbstractODEProblem, INT1,
+function integrate!(d::DifferentialInequality{F, N, T, PRB1, INT1, CB}) where {F, N, T<:RelaxTag, PRB1<:AbstractODEProblem,
+                                                          INT1,
                                                           CB<:AbstractContinuousCallback}
     d.local_problem_storage.pduals .= seed_duals(view(d.p, 1:N))
 
@@ -39,7 +39,6 @@ function integrate!(d::DifferentialInequality{F, N, T, PRB1, PRB2, INT1, CB}) wh
                                                   u0 = d.local_problem_storage.x0local,
                                                   p = d.p[1:d.np])
 
-    @show length(d.local_problem_storage.user_t)
     if ~isempty(d.local_problem_storage.user_t)
         solution = solve(d.local_problem_storage.pode_problem, d.local_problem_storage.integrator,
                      saveat = d.local_problem_storage.user_t, abstol = d.local_problem_storage.abstol,
