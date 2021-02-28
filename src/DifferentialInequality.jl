@@ -294,10 +294,9 @@ mutable struct DifferentialInequality{F, N, T<:RelaxTag, PRB1<:AbstractODEProble
     local_problem_storage
     np::Int
     nx::Int
+    nt::Int
     relax_t_dict_flt::Dict{Float64,Int64}
     relax_t_dict_indx::Dict{Int64,Int64}
-    local_t_dict_flt::Dict{Float64,Int64}
-    local_t_dict_indx::Dict{Int64,Int64}
     polyhedral_constraint::Union{PolyhedralConstraint,Nothing}
     has_params::Bool
     prob::ODERelaxProb
@@ -349,9 +348,7 @@ function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
                                 polyhedral_constraint, X_natural_box, params)
 
     relax_ode_prob = ODEProblem(f, utemp, d.tspan, p)
-    keyword_integator = local_ode_integrator
-    user_t = d.support_set.s
-    local_problem_storage = LocalProblemStorage(d, keyword_integator, user_t, calculate_local_sensitivity)
+    local_problem_storage = ODELocalIntegrator(d, local_ode_integrator)
 
     relax_t = Float64[]
     relax_lo = ElasticArray(zeros(Float64,d.nx,2))
@@ -365,20 +362,22 @@ function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
     xL = ElasticArray(zeros(Float64,d.nx,2))
     xU = ElasticArray(zeros(Float64,d.nx,2))
 
+    support_set = DBB.get(d, DBB.SupportSet())
     relax_t_dict_flt = Dict{Float64,Int64}()
     relax_t_dict_indx = Dict{Int64,Int64}()
-    local_t_dict_flt = Dict{Float64,Int64}()
-    local_t_dict_indx = Dict{Int64,Int64}()
+    for (i,s) in enumerate(support_set.s)
+        relax_t_dict_flt[s] = i
+        relax_t_dict_indx[i] = i
+    end
 
-    DifferentialInequality(calculate_relax, calculate_subgradient,
-                          calculate_local_sensitivity, differentiable,
+    DifferentialInequality(calculate_relax, calculate_subgradient, calculate_local_sensitivity,
+                           differentiable,
                           event_soft_tol, params, p, pL, pU, p_mc, d.x0, x0temp,
                           x0mctemp, xL, xU, relax_ode_prob, relax_ode_integrator, relax_t,
                           relax_lo, relax_hi, relax_cv, relax_cc, relax_cv_grad, relax_cc_grad,
                           relax_mc, vector_callback, IntegratorStates(),
-                          local_problem_storage, np, d.nx, relax_t_dict_flt,
-                          relax_t_dict_indx, local_t_dict_flt, local_t_dict_indx,
-                          d.polyhedral_constraint, has_params, d)
+                          local_problem_storage, np, d.nx, 0, relax_t_dict_flt,
+                          relax_t_dict_indx, d.polyhedral_constraint, has_params, d)
 end
 
 function relax!(d::DifferentialInequality{F, N, T, PRB1, INT1, CB}) where {F, N, T<:RelaxTag,
@@ -419,7 +418,8 @@ function relax!(d::DifferentialInequality{F, N, T, PRB1, INT1, CB}) where {F, N,
         if d.calculate_relax
             relax_ode_sol = solve(d.relax_ode_prob, d.relax_ode_integrator,
                                   callback = d.vector_callback, abstol = 1E-6,
-                                  reltol = 1E-3, saveat = d.local_problem_storage.user_t)
+                                  reltol = 1E-3,
+                                  saveat = d.local_problem_storage.user_t)
         else
             relax_ode_sol = solve(d.relax_ode_prob, d.relax_ode_integrator,
                                   abstol = 1E-6, reltol = 1E-3,
@@ -516,11 +516,17 @@ DBB.get(t::DifferentialInequality, v::DBB.IntegratorName) = "DifferentialInequal
 DBB.get(t::DifferentialInequality, v::DBB.IsNumeric) = false
 DBB.get(t::DifferentialInequality, v::DBB.IsSolutionSet) = true
 DBB.get(t::DifferentialInequality, v::DBB.TerminationStatus) = t.integrator_state.termination_status
-DBB.get(t::DifferentialInequality, v::DBB.SupportSet) =  DBB.SupportSet(t.local_problem_storage.user_t)
+DBB.get(t::DifferentialInequality, v::DBB.SupportSet) = t.prob.support_set
 DBB.get(t::DifferentialInequality, v::DBB.ParameterNumber) = t.np
 DBB.get(t::DifferentialInequality, v::DBB.StateNumber) = t.nx
-DBB.get(t::DifferentialInequality, v::DBB.SupportNumber) = length(t.local_problem_storage.user_t)
+DBB.get(t::DifferentialInequality, v::DBB.SupportNumber) = length(t.nt)
 DBB.get(t::DifferentialInequality, v::DBB.LocalSensitivityOn) = t.calculate_local_sensitivity
+
+function DBB.get(t::DifferentialInequality, v::DBB.LocalIntegrator)
+    return v.local_problem_storage
+end
+
+DBB.get(t::DifferentialInequality, t::AttachedProblem) = t.prob
 
 function DBB.set!(t::DifferentialInequality, v::DBB.LocalSensitivityOn, b::Bool)
     if t.calculate_local_sensitivity != b

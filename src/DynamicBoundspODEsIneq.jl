@@ -29,12 +29,7 @@ export DifferentialInequality, set!, setall!, get, getall!, relax!,
 
 import Base.size
 
-include("local_integration_problem.jl")
 include("contractors.jl")
 include("DifferentialInequality.jl")
-
-import DynamicBoundsBase: integrate!
-export integrate!
-include("integrate.jl")
 
 end
