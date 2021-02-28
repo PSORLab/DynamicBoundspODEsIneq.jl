@@ -523,19 +523,13 @@ DBB.get(t::DifferentialInequality, v::DBB.SupportNumber) = length(t.nt)
 DBB.get(t::DifferentialInequality, v::DBB.LocalSensitivityOn) = t.calculate_local_sensitivity
 
 function DBB.get(t::DifferentialInequality, v::DBB.LocalIntegrator)
-    return v.local_problem_storage
+    return t.local_problem_storage
 end
 
-DBB.get(t::DifferentialInequality, t::AttachedProblem) = t.prob
+DBB.get(t::DifferentialInequality, v::DBB.AttachedProblem) = t.prob
 
 function DBB.set!(t::DifferentialInequality, v::DBB.LocalSensitivityOn, b::Bool)
-    if t.calculate_local_sensitivity != b
-        t.calculate_local_sensitivity = b
-        keyword_integator = t.local_problem_storage.integrator
-        user_t = t.prob.support_set.s
-        t.local_problem_storage = LocalProblemStorage(t.prob, keyword_integator, user_t, t.calculate_local_sensitivity)
-        return
-    end
+    t.calculate_local_sensitivity = b
     return
 end
 
@@ -545,20 +539,6 @@ function get_val_loc(t::DifferentialInequality, index::Int64, time::Float64)
         return t.relax_t_dict_indx[index]
     end
     t.relax_t_dict_flt[time]
-end
-
-function get_val_loc_local(t::DifferentialInequality, index::Int64, time::Float64)
-    (index <= 0 && time == -Inf) && error("Must set either index or time.")
-    if index > 0
-        return t.local_t_dict_indx[index]
-    end
-    t.local_t_dict_flt[time]
-end
-
-function DBB.get(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Value)
-    val_loc = get_val_loc_local(t, v.index, v.time)
-    out .= t.local_problem_storage.pode_x[:, val_loc]
-    return
 end
 
 function DBB.get(out::Vector{Float64}, t::DifferentialInequality, v::DBB.Bound{Lower})
@@ -614,11 +594,6 @@ function DBB.get(out::Matrix{Float64}, t::DifferentialInequality, v::DBB.Subgrad
     return
 end
 
-function DBB.getall!(out::Array{Float64,2}, t::DifferentialInequality, v::DBB.Value)
-    copyto!(out, t.local_problem_storage.pode_x)
-    return
-end
-
 function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Subgradient{Lower})
     if !t.calculate_relax
         for i = 1:t.np
@@ -648,13 +623,6 @@ function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g
                 end
             end
         end
-    end
-    return
-end
-
-function DBB.getall!(out::Vector{Array{Float64,2}}, t::DifferentialInequality, g::DBB.Gradient{Nominal})
-    for i = 1:t.np
-        copyto!(out[i], t.local_problem_storage.pode_dxdp[i])
     end
     return
 end
