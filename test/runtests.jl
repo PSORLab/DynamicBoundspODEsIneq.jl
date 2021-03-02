@@ -104,41 +104,41 @@ end
     support_set = DBB.get(integrator, DBB.SupportSet())
     @test isapprox(support_set.s[2], 0.005)
 
-    vout = zeros(6, size(integrator.local_problem_storage.pode_x, 2))
+    vout = zeros(6, size(integrator.local_problem_storage.x, 2))
     DBB.getall!(vout, integrator, Value())
-    @test isapprox(vout[5,end], 0.13476110749580916, atol = 1E-5)
-    @test isapprox(vout[6,end], 0.13476110749580916, atol = 1E-5)
+    @test isapprox(vout[5,end], 1.1438878551545235, atol = 1E-5)
+    @test isapprox(vout[6,end], 14.856112144845488, atol = 1E-5)
 
 
     out2 = Matrix{Float64}[]
     for i = 1:6
-        push!(out2, zeros(6, size(integrator.local_problem_storage.pode_dxdp[1], 2)))
+        push!(out2, zeros(6, size(integrator.local_problem_storage.dxdp[1], 2)))
     end
     DBB.getall!(out2, integrator, DBB.Gradient{Nominal}())
-    @test isapprox(out2[2][3, 20], -0.00015954077851070749, atol = 1E-5)
+    @test isapprox(out2[2][3, 20], -0.007927203440720683, atol = 1E-5)
 
     out3 = Matrix{Float64}[]
     for i = 1:6
-        push!(out3, zeros(6, size(integrator.local_problem_storage.pode_dxdp[1], 2)))
+        push!(out3, zeros(6, size(integrator.local_problem_storage.dxdp[1], 2)))
     end
     @test_throws ErrorException DBB.getall!(out3, integrator, DBB.Gradient{Lower}())
 
     out4 = Matrix{Float64}[]
     for i = 1:6
-        push!(out4, zeros(6, size(integrator.local_problem_storage.pode_dxdp[1], 2)))
+        push!(out4, zeros(6, size(integrator.local_problem_storage.dxdp[1], 2)))
     end
     @test_throws ErrorException DBB.getall!(out4, integrator, DBB.Gradient{Upper}())
 
     out5 = Matrix{Float64}[]
     for i = 1:6
-        push!(out5, zeros(6, size(integrator.local_problem_storage.pode_dxdp[1], 2)))
+        push!(out5, zeros(6, size(integrator.local_problem_storage.dxdp[1], 2)))
     end
     DBB.getall!(out5, integrator, DBB.Subgradient{Lower}())
     @test isapprox(out5[2][3, 20], 0.0, atol = 1E-8)
 
     out6 = Matrix{Float64}[]
     for i = 1:6
-        push!(out6, zeros(6, size(integrator.local_problem_storage.pode_dxdp[1], 2)))
+        push!(out6, zeros(6, size(integrator.local_problem_storage.dxdp[1], 2)))
     end
     DBB.getall!(out6, integrator, DBB.Subgradient{Upper}())
     @test isapprox(out6[2][3, 20], 0.0, atol = 1E-8)
