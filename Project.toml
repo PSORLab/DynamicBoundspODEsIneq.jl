@@ -16,7 +16,7 @@ Sundials = "c3572dad-4567-51f8-b174-8c6c989267f4"
 
 [compat]
 DiffEqBase = "~5, ~6"
-DiffEqSensitivity = "~5, ~6"
+DiffEqSensitivity = "~6"
 DocStringExtensions = "~0.8"
 DynamicBoundsBase = "0.5.4"
 ElasticArrays = "~1"
