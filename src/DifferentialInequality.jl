@@ -363,6 +363,7 @@ function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
     xU = ElasticArray(zeros(Float64,d.nx,2))
 
     support_set = DBB.get(d, DBB.SupportSet())
+    nt = length(support_set.s)
     relax_t_dict_flt = Dict{Float64,Int64}()
     relax_t_dict_indx = Dict{Int64,Int64}()
     for (i,s) in enumerate(support_set.s)
@@ -376,7 +377,7 @@ function DifferentialInequality(d::ODERelaxProb; calculate_relax::Bool = true,
                           x0mctemp, xL, xU, relax_ode_prob, relax_ode_integrator, relax_t,
                           relax_lo, relax_hi, relax_cv, relax_cc, relax_cv_grad, relax_cc_grad,
                           relax_mc, vector_callback, IntegratorStates(),
-                          local_problem_storage, np, d.nx, 0, relax_t_dict_flt,
+                          local_problem_storage, np, d.nx, nt, relax_t_dict_flt,
                           relax_t_dict_indx, d.polyhedral_constraint, has_params, d)
 end
 
@@ -414,7 +415,7 @@ function relax!(d::DifferentialInequality{F, N, T, PRB1, INT1, CB}) where {F, N,
             end
         end
         d.relax_ode_prob.f.f.params .= d.params
-        d.relax_ode_prob = remake(d.relax_ode_prob; u0=d.x0)
+        d.relax_ode_prob = deepcopy(remake(d.relax_ode_prob; u0=d.x0))
         if d.calculate_relax
             relax_ode_sol = solve(d.relax_ode_prob, d.relax_ode_integrator,
                                   callback = d.vector_callback, abstol = 1E-6,
@@ -519,7 +520,7 @@ DBB.get(t::DifferentialInequality, v::DBB.TerminationStatus) = t.integrator_stat
 DBB.get(t::DifferentialInequality, v::DBB.SupportSet) = t.prob.support_set
 DBB.get(t::DifferentialInequality, v::DBB.ParameterNumber) = t.np
 DBB.get(t::DifferentialInequality, v::DBB.StateNumber) = t.nx
-DBB.get(t::DifferentialInequality, v::DBB.SupportNumber) = length(t.nt)
+DBB.get(t::DifferentialInequality, v::DBB.SupportNumber) = t.nt
 DBB.get(t::DifferentialInequality, v::DBB.LocalSensitivityOn) = t.calculate_local_sensitivity
 
 function DBB.get(t::DifferentialInequality, v::DBB.LocalIntegrator)

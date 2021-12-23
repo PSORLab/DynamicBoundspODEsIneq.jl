@@ -1,7 +1,7 @@
 name = "DynamicBoundspODEsIneq"
 uuid = "8922cf73-a24a-4c59-b2b7-455e840875f0"
 authors = ["Matthew Wilhelm <matthew.wilhelm@uconn.edu>"]
-version = "0.5.3"
+version = "0.6"
 
 [deps]
 DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
@@ -15,16 +15,16 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Sundials = "c3572dad-4567-51f8-b174-8c6c989267f4"
 
 [compat]
-DiffEqBase = "~5, ~6"
+DiffEqBase = "~6"
 DiffEqSensitivity = "~6"
 DocStringExtensions = "~0.8"
-DynamicBoundsBase = "0.5.6"
+DynamicBoundsBase = "~0.6"
 ElasticArrays = "~1"
 ForwardDiff = "~0.10"
-McCormick = "~0.10, ~0.11"
+McCormick = "~0.12"
 Reexport = "~0.2"
-Sundials = "~3, ~4"
-julia = "~1.6"
+Sundials = "~4"
+julia = "~1.6, ~1.7"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
