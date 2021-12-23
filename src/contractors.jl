@@ -17,6 +17,12 @@
 const POLYHEDRON_A_TOL = 1e-4
 const POLYHEDRON_WIDTH_TOL = 1e-12
 
+function mid3_I(x::Interval{Float64}, y::Interval{Float64}, z::Interval{Float64})
+    a = max(min(x,y), min(max(x,y),z))
+    return a
+end
+
+
 """
 $(FUNCTIONNAME)
 
@@ -29,35 +35,34 @@ function polyhedral_contact!(d::PolyhedralConstraint, Xin::Vector{Interval{Float
     b = d.b
     Aik = 0.0
     Aij = 0.0
-    bi = 0.0
-    zL = 0.0
-    zU = 0.0
-    alphaL = 0.0
-    alphaU = 0.0
-    lambda = 0.0
-    gamma = 0.0
+    zL = Interval{Float64}(0.0)
+    zU = Interval{Float64}(0.0)
+    alphaL = Interval{Float64}(0.0)
+    alphaU = Interval{Float64}(0.0)
+    lambda = Interval{Float64}(0.0)
+    gamma = Interval{Float64}(0.0)
     Xtemp = Interval{Float64}(0.0)
     for i = 1:nm
-        alphaL = b[i]
-        alphaU = b[i]
+        alphaL = @interval(b[i])
+        alphaU = @interval(b[i])
         for k = 1:nx
             Aik = A[i, k]
-            zL = X[k].lo
-            zU = X[k].hi
+            zL = @interval(X[k].lo)
+            zU = @interval(X[k].hi)
             alphaL -= max(Aik*zL, Aik*zU)
             alphaU -= min(Aik*zL, Aik*zU)
         end
         for j = 1:nx
             Aij = A[i,j]
             if abs(Aij) > POLYHEDRON_A_TOL
-                zL = X[j].lo
-                zU = X[j].hi
+                zL = @interval(X[j].lo)
+                zU = @interval(X[j].hi)
                 alphaL += max(Aij*zL, Aij*zU)
                 alphaU += min(Aij*zL, Aij*zU)
                 lambda = min(alphaL/Aij, alphaU/Aij)
                 gamma = max(alphaL/Aij, alphaU/Aij)
-                zL, _ = mid3(zL, zU, lambda)
-                zU, _ = mid3(zL, zU, gamma)
+                zL = mid3_I(zL, zU, lambda)
+                zU = mid3_I(zL, zU, gamma)
                 Xtemp = @interval(zL, zU)
                 if diam(Xtemp) > POLYHEDRON_WIDTH_TOL
                     X[j] = Xtemp
